@@ -27,21 +27,47 @@
       restDisplay.textContent = formatTime(Math.max(0, remainingSeconds));
     }
 
-    function vibrateFinish(){
-      try{
-      // Vibrazione SOLO se attiva nelle impostazioni
-      if (localStorage.getItem("gt_vibration") !== "off"){
-        if (navigator && typeof navigator.vibrate === "function"){
-          navigator.vibrate([200, 120, 200, 120, 400]);
-        }
+function vibrateFinish(){
+  try{
+    // Vibrazione SOLO se attiva nelle impostazioni
+    if (localStorage.getItem("gt_vibration") !== "off"){
+      if (navigator && typeof navigator.vibrate === "function"){
+        navigator.vibrate([200,120,200,120,400]);
       }
-
-      }catch{}
-
-      // Se hai già funzioni haptic nel tuo progetto, le usiamo senza toccare altro
-      try{ if (typeof hapticHeavy === "function") hapticHeavy(); }catch{}
-      try{ if (typeof hapticMedium === "function") hapticMedium(); }catch{}
     }
+  }catch{}
+
+  // 🔔 Suono per TUTTI (iPhone incluso)
+  try{
+    if (localStorage.getItem("gt_vibration") !== "off"){
+      playBeep();
+    }
+  }catch{}
+
+  try{ if (typeof hapticHeavy === "function") hapticHeavy(); }catch{}
+  try{ if (typeof hapticMedium === "function") hapticMedium(); }catch{}
+}
+function vibrateFinish(){
+  try{
+    // Vibrazione SOLO se attiva nelle impostazioni
+    if (localStorage.getItem("gt_vibration") !== "off"){
+      if (navigator && typeof navigator.vibrate === "function"){
+        navigator.vibrate([200,120,200,120,400]);
+      }
+    }
+  }catch{}
+
+  // 🔔 Suono per TUTTI (iPhone incluso)
+  try{
+    if (localStorage.getItem("gt_vibration") !== "off"){
+      playBeep();
+    }
+  }catch{}
+
+  try{ if (typeof hapticHeavy === "function") hapticHeavy(); }catch{}
+  try{ if (typeof hapticMedium === "function") hapticMedium(); }catch{}
+}
+
 
     function stopInterval(){
       if (restInterval){
@@ -78,6 +104,24 @@
       endAt = 0;
       clearPersisted();
       updateDisplay();
+      function playBeep(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.value = 880; // suono acuto
+    gain.gain.value = 0.1;     // volume basso
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25); // 0.25 secondi
+  }catch{}
+}
+
       vibrateFinish();
 
       // Messaggio finale: usa il tuo modal se esiste, altrimenti alert
