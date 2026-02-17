@@ -17,50 +17,49 @@
     let remainingSeconds = parseInt(restInput.value || "90", 10);
     let endAt = 0;
 
-    // ✅ AUDIO (iPhone): sblocco con gesto utente
-    let audioCtx = null;
-    let audioUnlocked = false;
+    // ✅ iPhone PWA: arma audio con un gesto utente e tienilo “vivo”
+    let __keepAlive = null;
+    let __keepAliveArmed = false;
 
-    function unlockAudio(){
+    function armAudio(){
       try{
-        if (audioUnlocked) return;
+        if(__keepAliveArmed) return;
 
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
+        // WAV silenzioso (piccolissimo) in base64
+        const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 
-        audioCtx = new AC();
+        __keepAlive = new Audio(SILENT_WAV);
+        __keepAlive.loop = true;
+        __keepAlive.volume = 0.0001;
 
-        // suono "muto" brevissimo per sbloccare Safari/iOS
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        gain.gain.value = 0.0001;
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.01);
-
-        audioUnlocked = true;
+        // Deve partire con gesto utente (click su Avvia)
+        __keepAlive.play().then(()=>{
+          __keepAliveArmed = true;
+        }).catch(()=>{});
       }catch{}
     }
 
-    function playBeep(){
+    function playBeepIOS(){
       try{
-        if (!audioCtx) return;
+        // se non armato, iOS spesso blocca
+        if(!__keepAliveArmed) return;
 
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        const AC = (window.AudioContext || window.webkitAudioContext);
+        if(!AC) return;
+
+        const ctx = new AC();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
 
         osc.type = "sine";
-        osc.frequency.value = 880; // suono acuto
-        gain.gain.value = 0.25;    // volume (abbastanza alto ma non esagerato)
+        osc.frequency.value = 880; // beep
+        gain.gain.value = 0.25;
 
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(ctx.destination);
 
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.30); // 0.30 secondi
+        osc.stop(ctx.currentTime + 0.30);
       }catch{}
     }
 
@@ -83,8 +82,8 @@
             navigator.vibrate([200, 120, 200, 120, 400]);
           }
 
-          // 🔔 Suono per TUTTI (iPhone incluso)
-          playBeep();
+          // ✅ iPhone (PWA): beep
+          playBeepIOS();
         }
       }catch{}
 
@@ -170,8 +169,8 @@
 
     // START
     btnStartRest.addEventListener("click", () => {
-      // ✅ iPhone: sblocca audio col gesto utente
-      unlockAudio();
+      // ✅ iPhone PWA: arma audio col gesto utente
+      armAudio();
 
       if (endAt) return; // già in corso
 
