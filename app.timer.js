@@ -17,6 +17,47 @@
     let remainingSeconds = parseInt(restInput.value || "90", 10);
     let endAt = 0;
 
+    // ✅ Audio context (iPhone: serve user gesture)
+    let __beepCtx = null;
+
+    function ensureBeepUnlocked(){
+      try{
+        const AC = (window.AudioContext || window.webkitAudioContext);
+        if(!AC) return;
+
+        if(!__beepCtx) __beepCtx = new AC();
+        if(__beepCtx.state === "suspended"){
+          __beepCtx.resume().catch(()=>{});
+        }
+      }catch{}
+    }
+
+    function playBeep(){
+      try{
+        const AC = (window.AudioContext || window.webkitAudioContext);
+        if(!AC) return;
+
+        if(!__beepCtx) __beepCtx = new AC();
+        // su iPhone spesso è suspended finché non fai resume dopo un gesto utente
+        if(__beepCtx.state === "suspended"){
+          __beepCtx.resume().catch(()=>{});
+        }
+
+        const osc = __beepCtx.createOscillator();
+        const gain = __beepCtx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.value = 880; // suono acuto
+        gain.gain.value = 0.12;    // volume basso
+
+        osc.connect(gain);
+        gain.connect(__beepCtx.destination);
+
+        osc.start();
+        osc.stop(__beepCtx.currentTime + 0.25); // 0.25 secondi
+      }catch{}
+    }
+
     function formatTime(sec){
       const m = Math.floor(sec / 60);
       const s = sec % 60;
@@ -27,47 +68,24 @@
       restDisplay.textContent = formatTime(Math.max(0, remainingSeconds));
     }
 
-function vibrateFinish(){
-  try{
-    // Vibrazione SOLO se attiva nelle impostazioni
-    if (localStorage.getItem("gt_vibration") !== "off"){
-      if (navigator && typeof navigator.vibrate === "function"){
-        navigator.vibrate([200,120,200,120,400]);
-      }
+    function vibrateFinish(){
+      try{
+        // Vibrazione SOLO se attiva nelle impostazioni
+        if (localStorage.getItem("gt_vibration") !== "off"){
+          // Android / molti browser
+          if (navigator && typeof navigator.vibrate === "function"){
+            navigator.vibrate([200, 120, 200, 120, 400]);
+          }
+
+          // 🔔 Suono per TUTTI (iPhone incluso)
+          playBeep();
+        }
+      }catch{}
+
+      // Se hai già funzioni haptic nel tuo progetto, le usiamo senza toccare altro
+      try{ if (typeof hapticHeavy === "function") hapticHeavy(); }catch{}
+      try{ if (typeof hapticMedium === "function") hapticMedium(); }catch{}
     }
-  }catch{}
-
-  // 🔔 Suono per TUTTI (iPhone incluso)
-  try{
-    if (localStorage.getItem("gt_vibration") !== "off"){
-      playBeep();
-    }
-  }catch{}
-
-  try{ if (typeof hapticHeavy === "function") hapticHeavy(); }catch{}
-  try{ if (typeof hapticMedium === "function") hapticMedium(); }catch{}
-}
-function vibrateFinish(){
-  try{
-    // Vibrazione SOLO se attiva nelle impostazioni
-    if (localStorage.getItem("gt_vibration") !== "off"){
-      if (navigator && typeof navigator.vibrate === "function"){
-        navigator.vibrate([200,120,200,120,400]);
-      }
-    }
-  }catch{}
-
-  // 🔔 Suono per TUTTI (iPhone incluso)
-  try{
-    if (localStorage.getItem("gt_vibration") !== "off"){
-      playBeep();
-    }
-  }catch{}
-
-  try{ if (typeof hapticHeavy === "function") hapticHeavy(); }catch{}
-  try{ if (typeof hapticMedium === "function") hapticMedium(); }catch{}
-}
-
 
     function stopInterval(){
       if (restInterval){
@@ -104,24 +122,6 @@ function vibrateFinish(){
       endAt = 0;
       clearPersisted();
       updateDisplay();
-      function playBeep(){
-  try{
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = "sine";
-    osc.frequency.value = 880; // suono acuto
-    gain.gain.value = 0.1;     // volume basso
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.25); // 0.25 secondi
-  }catch{}
-}
-
       vibrateFinish();
 
       // Messaggio finale: usa il tuo modal se esiste, altrimenti alert
@@ -164,6 +164,9 @@ function vibrateFinish(){
 
     // START
     btnStartRest.addEventListener("click", () => {
+      // ✅ iPhone: sblocca audio al gesto utente
+      ensureBeepUnlocked();
+
       if (endAt) return; // già in corso
 
       const v = parseInt(restInput.value, 10);
