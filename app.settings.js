@@ -14,6 +14,8 @@
 
   const THEME_KEY = "gt_theme"; // "dark" | "light"
   const LANG_KEY  = "gt_lang";  // "it" | "en"
+const VIBRATION_KEY = "gt_vibration";
+const vibrationToggle = document.getElementById("vibrationToggle");
 
   let __gt_lang = "it";
 
@@ -310,6 +312,20 @@
       try{ if(typeof hapticMedium === "function") hapticMedium(); }catch{}
     });
   }
+/* =========================
+   VIBRATION
+========================= */
+function loadVibration(){
+  const saved = localStorage.getItem(VIBRATION_KEY);
+  if(vibrationToggle){
+    vibrationToggle.checked = saved !== "off"; // default ON
+  }
+}
+
+function saveVibration(){
+  if(!vibrationToggle) return;
+  localStorage.setItem(VIBRATION_KEY, vibrationToggle.checked ? "on" : "off");
+}
 
   /* =========================
      MODAL OPEN/CLOSE
@@ -333,6 +349,7 @@
     // lingua prima, poi tema (così la label tema usa la lingua giusta)
     loadLanguage();
     loadTheme();
+    loadVibration();
 
     if(btnSettings) btnSettings.addEventListener("click", openSettings);
     if(btnClose) btnClose.addEventListener("click", closeSettings);
@@ -355,7 +372,9 @@
         try{ if(typeof hapticMedium === "function") hapticMedium(); }catch{}
       });
     }
-
+    if(vibrationToggle){
+  vibrationToggle.addEventListener("change", saveVibration);
+}
     bindLanguage();
   };
 

@@ -313,41 +313,60 @@
     <div class="modalIcon">⚙️</div>
     <div class="modalTitle">Impostazioni</div>
 
-  <div class="settingsBox" style="margin-top:12px;">
+    <div class="settingsBox" style="margin-top:12px;">
 
-  <!-- Tema -->
-  <div class="settingsRow">
-    <div class="settingsLabel">
-      <div style="font-weight:1000;">Tema</div>
-      <div id="themeLabel" class="tiny muted">Nero</div>
-    </div>
+      <!-- Tema -->
+      <div class="settingsRow">
+        <div class="settingsLabel">
+          <div style="font-weight:1000;">Tema</div>
+          <div id="themeLabel" class="tiny muted">Nero</div>
+        </div>
 
-    <label class="switch" title="Tema chiaro">
-      <input id="themeToggle" type="checkbox" />
-      <span class="slider"></span>
-    </label>
+        <label class="switch" title="Tema chiaro">
+          <input id="themeToggle" type="checkbox" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Lingua -->
+      <div class="settingsRow" style="margin-top:16px;">
+        <div class="settingsLabel">
+          <div style="font-weight:1000;">Lingua</div>
+          <div id="langLabel" class="tiny muted">Italiano</div>
+        </div>
+
+        <select id="langSelect" class="inp" style="width:150px; height:40px;">
+          <option value="it">🇮🇹 Italiano</option>
+          <option value="en">🇬🇧 English</option>
+        </select>
+      </div>
+<!-- Vibrazione -->
+<div class="settingsRow" style="margin-top:16px;">
+  <div class="settingsLabel">
+    <div style="font-weight:1000;">Vibrazione timer</div>
+    <div class="tiny muted">Attiva vibrazione a fine recupero</div>
   </div>
 
-  <!-- Lingua -->
-  <div class="settingsRow" style="margin-top:16px;">
-    <div class="settingsLabel">
-      <div style="font-weight:1000;">Lingua</div>
-      <div id="langLabel" class="tiny muted">Italiano</div>
-    </div>
-
-    <select id="langSelect" class="inp" style="width:150px; height:40px;">
-      <option value="it">🇮🇹 Italiano</option>
-      <option value="en">🇬🇧 English</option>
-    </select>
-  </div>
-
+  <label class="switch">
+    <input id="vibrationToggle" type="checkbox" />
+    <span class="slider"></span>
+  </label>
 </div>
 
+    </div>
 
+    <!-- ✅ VERSIONE (qui, dentro il modal) -->
+    <div style="margin-top:18px; text-align:center;">
+      <div class="tiny muted">Gym Tracker</div>
+      <div style="font-size:12px; opacity:.6;">Versione 1.0</div>
+    </div>
+
+    <!-- ✅ UN SOLO BOTTONE CHIUDI -->
     <button id="btnSettingsClose" type="button" class="btn primary w100" style="margin-top:14px;">Chiudi</button>
   </div>
 </div>
 <!-- ✅ FINE IMPOSTAZIONI -->
+
 
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>

@@ -29,10 +29,13 @@
 
     function vibrateFinish(){
       try{
-        // Android / molti browser
+      // Vibrazione SOLO se attiva nelle impostazioni
+      if (localStorage.getItem("gt_vibration") !== "off"){
         if (navigator && typeof navigator.vibrate === "function"){
           navigator.vibrate([200, 120, 200, 120, 400]);
         }
+      }
+
       }catch{}
 
       // Se hai già funzioni haptic nel tuo progetto, le usiamo senza toccare altro
