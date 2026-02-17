@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta name="google-adsense-account" content="ca-pub-3954056972955412">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MV5J2E20CB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-MV5J2E20CB');
+  </script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
+  <title>Gym Tracker</title>
+
+  <link rel="stylesheet" href="style.css?v=16" />
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b1220" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gym Tracker">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+
+    .main::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topLeft">
+      <div class="topLogo">🏋️</div>
+      <div class="topText">
+        <div id="topTitle" class="topTitle">Workout</div>
+        <div id="topSub" class="topSub"></div>
+        <div id="userBadge" class="topSub" style="margin-top:4px;"></div>
+      </div>
+    </div>
+
+    <div class="topActions">
+      <button id="btnGoogleIn" type="button" class="iconBtn" title="Accedi con Google">🔒</button>
+      <button id="btnGoogleOut" type="button" class="iconBtn hidden" title="Esci">⎋</button>
+            <button id="btnSettings" type="button" class="iconBtn" title="Impostazioni">⚙️</button>
+</div>
+  </header>
+
+  <main class="main">
+    <section id="view-workout" class="view">
+      <!-- ✅ CONTINUA ALLENAMENTO (compare solo se c'è una bozza) -->
+<div id="resumeWorkoutCard" class="card hidden" style="padding:12px;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+    <div>
+      <div style="font-weight:1000; font-size:16px;">⏸ Allenamento in corso</div>
+      <div id="resumeWorkoutMeta" class="muted" style="font-size:12px; margin-top:6px;">—</div>
+    </div>
+    <div class="badge" id="resumeWorkoutDone" style="white-space:nowrap;">—</div>
+  </div>
+
+  <div class="row" style="margin-top:10px;">
+    <button id="btnResumeWorkout" type="button" class="btn primary flex1" style="height:48px;">▶️ Continua</button>
+    <button id="btnDiscardResumeWorkout" type="button" class="btn ghost danger" style="height:48px;">🗑️ Annulla</button>
+  </div>
+
+  <div class="tiny muted" style="margin-top:8px;">
+    Se hai chiuso per sbaglio, riprendi da dove eri rimasto.
+  </div>
+</div>
+
+      <div class="card">
+        <div class="chipsRow">
+          <div class="chips" id="dayChips"></div>
+          <div class="chipTools">
+            <button id="btnNewDay" type="button" class="iconBtnSm" title="Nuova scheda">➕</button>
+            <button id="btnRenameDay" type="button" class="iconBtnSm" title="Rinomina scheda">✏️</button>
+            <button id="btnDeleteDay" type="button" class="iconBtnSm danger" title="Elimina scheda">🗑️</button>
+          </div>
+        </div>
+
+        <div class="actionRow">
+          <button id="btnAddExercise" type="button" class="btn small">＋ Esercizio</button>
+          <button id="btnSavePlan" type="button" class="btn small">💾 Salva scheda</button>
+          <div class="tiny muted">Se NON inizi l’allenamento vedi la scheda e la puoi modificare.</div>
+        </div>
+
+        <div class="row">
+          <button id="btnStart" type="button" class="btn primary flex1">Inizia allenamento</button>
+          <button id="btnDiscard" type="button" class="btn ghost danger">Annulla</button>
+        </div>
+
+       <!-- ✅ TIMER RECUPERO (più basso + bottoni di fianco, non sborda) -->
+<div class="card" id="restTimerCard" style="margin-top:10px; padding:8px;">
+  <div class="cardTitle" style="margin-bottom:4px;">⏱ Timer recupero</div>
+
+  <div class="row" style="margin-top:6px;">
+    <label class="field flex1">
+      <span>Secondi recupero</span>
+      <input id="restSeconds" class="inp" type="number" value="90" min="10" step="5" style="padding:8px;" />
+    </label>
+  </div>
+
+  <!-- ✅ display + bottoni nella STESSA riga -->
+  <div class="row" style="margin-top:6px; display:flex; align-items:center; gap:10px;">
+    <div id="restDisplay" style="font-size:20px; font-weight:800; min-width:64px;">01:30</div>
+
+    <div style="display:flex; gap:8px; flex:1;">
+      <button id="btnStartRest" type="button" class="btn primary" style="height:34px; padding:6px 10px; width:100%;">Avvia</button>
+      <button id="btnResetRest" type="button" class="btn ghost" style="height:34px; padding:6px 10px; width:100%;">Reset</button>
+    </div>
+  </div>
+</div>
+<!-- ✅ FINE TIMER -->
+
+
+        <div class="miniRow">
+          <div class="mini">
+            <div class="miniLabel">Stato</div>
+            <div id="draftState" class="miniValue">Nessuna bozza</div>
+          </div>
+          <div class="mini">
+            <div class="miniLabel">Completati</div>
+            <div id="draftDone" class="miniValue">—</div>
+          </div>
+        </div>
+
+        <button id="btnSave" type="button" class="btn primary w100" style="margin-top:12px;">Salva allenamento</button>
+        <div id="workMsg" class="msg"></div>
+      </div>
+
+      <div id="exerciseList" class="stack"></div>
+      <div class="spacer"></div>
+    </section>
+
+    <section id="view-history" class="view hidden">
+      <div class="card">
+        <div class="row">
+          <input id="histSearch" class="inp flex1" placeholder="Scrivi NOME ESATTO esercizio (es. “Leg press”)" />
+        </div>
+
+        <div class="row">
+          <select id="histDay" class="inp flex1"></select>
+          <button id="btnClearHistory" type="button" class="btn ghost danger">Svuota</button>
+        </div>
+
+        <div id="chartsWrap" class="chartsWrap hidden">
+          <div class="chartCard">
+            <div class="chartTitle" id="repChartTitle">Reps</div>
+            <canvas id="repChart" height="110"></canvas>
+            <div class="tiny muted" id="repChartNote"></div>
+          </div>
+
+          <div class="chartCard">
+            <div class="chartTitle" id="kgChartTitle">Kg</div>
+            <canvas id="kgChart" height="110"></canvas>
+            <div class="tiny muted" id="kgChartNote"></div>
+          </div>
+        </div>
+
+        <!-- ✅ AGGIUNTA: bottone PR sotto i grafici -->
+        <button id="btnShowPR" type="button" class="btn ghost w100 hidden" style="height:52px; margin-top:10px;">
+          🔥 Scopri il PR
+        </button>
+
+        <div class="tiny muted">
+          Nota: la ricerca è <b>esatta</b>. Se scrivi “leg” non trova nulla: devi scrivere “leg press”.
+        </div>
+      </div>
+
+      <div id="historyList" class="stack"></div>
+      <div class="spacer"></div>
+    </section>
+
+    <section id="view-measures" class="view hidden">
+      <div class="card">
+        <div class="row">
+          <label class="field flex1">
+            <span>Data</span>
+            <input id="mDate" class="inp" type="date" style="height:40px; font-size:15px; padding:8px 12px;" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="field flex1">
+            <span>Peso (kg)</span>
+            <input id="mWeight" class="inp" type="number" step="0.1" inputmode="decimal" placeholder="73.0" />
+          </label>
+
+          <label class="field flex1">
+            <span>Petto (cm)</span>
+            <input id="mChest" class="inp" type="number" step="0.1" inputmode="decimal" />
+          </label>
+        </div>
+
+        <!-- ✅ QUI: al posto di "Braccio (cm)" metto "Vita (cm)" (una sola vita) -->
+        <div class="row">
+          <label class="field flex1">
+            <span>Spalle (cm)</span>
+            <input id="mShoulders" class="inp" type="number" step="0.1" inputmode="decimal" />
+          </label>
+
+          <label class="field flex1">
+            <span>Vita (cm)</span>
+            <input id="mWaist" class="inp" type="number" step="0.1" inputmode="decimal" />
+          </label>
+        </div>
+
+        <!-- ✅ Braccio SX/DX -->
+        <div class="row">
+          <label class="field flex1">
+            <span>Braccio SX (cm)</span>
+            <input id="mArmL" class="inp" type="number" step="0.1" inputmode="decimal" />
+          </label>
+
+          <label class="field flex1">
+            <span>Braccio DX (cm)</span>
+            <input id="mArmR" class="inp" type="number" step="0.1" inputmode="decimal" />
+          </label>
+        </div>
+
+        <!-- ✅ Quad SX/DX -->
+        <div class="row">
+          <label class="field flex1">
+            <span>Quad SX (cm)</span>
+            <input id="mQuadL" class="inp" type="number" step="0.1" inputmode="decimal" />
+          </label>
+
+          <label class="field flex1">
+            <span>Quad DX (cm)</span>
+            <input id="mQuadR" class="inp" type="number" step="0.1" inputmode="decimal" />
+          </label>
+        </div>
+
+        <div class="row">
+          <button id="btnSaveMeasures" type="button" class="btn primary flex1" style="height:48px;">💾 Salva misure</button>
+          <button id="btnClearMeasures" type="button" class="btn ghost danger flex1" style="height:48px;">🗑️ Svuota storico</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <button id="btnOpenMeasuresHistoryPage" type="button" class="btn ghost w100" style="height:56px;">
+          Storico misure
+        </button>
+      </div>
+
+      <div class="spacer"></div>
+    </section>
+
+    <section id="view-measures-history" class="view hidden">
+      <div class="card">
+        <div class="row" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div class="cardTitle" style="margin:0;">Storico misure</div>
+          <button id="btnBackToMeasures" type="button" class="btn ghost">Indietro</button>
+        </div>
+      </div>
+
+      <div id="measuresHistoryList" class="stack" style="margin-top:12px;"></div>
+      <div class="spacer"></div>
+    </section>
+
+  </main>
+
+  <nav class="bottomNav">
+    <button class="navItem active" data-view="workout" type="button">
+      <span class="navIcon">🏋️</span><span class="navTxt">Workout</span>
+    </button>
+    <button class="navItem" data-view="history" type="button">
+      <span class="navIcon">🕘</span><span class="navTxt">Storico</span>
+    </button>
+    <button class="navItem" data-view="measures" type="button">
+      <span class="navIcon">📏</span><span class="navTxt">Misure</span>
+    </button>
+  </nav>
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalIcon" id="modalIcon">✅</div>
+      <div class="modalTitle" id="modalTitle">Ok</div>
+      <div class="modalSub" id="modalSub">...</div>
+      <button id="modalBtn" type="button" class="btn primary w100" style="margin-top:14px;">Ok</button>
+    </div>
+  </div>
+
+<!-- ✅ IMPOSTAZIONI -->
+<div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modalCard">
+    <div class="modalIcon">⚙️</div>
+    <div class="modalTitle">Impostazioni</div>
+
+  <div class="settingsBox" style="margin-top:12px;">
+
+  <!-- Tema -->
+  <div class="settingsRow">
+    <div class="settingsLabel">
+      <div style="font-weight:1000;">Tema</div>
+      <div id="themeLabel" class="tiny muted">Nero</div>
+    </div>
+
+    <label class="switch" title="Tema chiaro">
+      <input id="themeToggle" type="checkbox" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- Lingua -->
+  <div class="settingsRow" style="margin-top:16px;">
+    <div class="settingsLabel">
+      <div style="font-weight:1000;">Lingua</div>
+      <div id="langLabel" class="tiny muted">Italiano</div>
+    </div>
+
+    <select id="langSelect" class="inp" style="width:150px; height:40px;">
+      <option value="it">🇮🇹 Italiano</option>
+      <option value="en">🇬🇧 English</option>
+    </select>
+  </div>
+
+</div>
+
+
+    <button id="btnSettingsClose" type="button" class="btn primary w100" style="margin-top:14px;">Chiudi</button>
+  </div>
+</div>
+<!-- ✅ FINE IMPOSTAZIONI -->
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+
+  <script src="app.core.js?v=5"></script>
+    <script src="app.settings.js?v=2"></script>
+<script src="app.workout.js?v=5"></script>
+  <script src="app.timer.js?v=5"></script>
+  <script src="app.history.js?v=5"></script>
+  <script src="app.measures.js?v=6"></script>
+  <script src="app.measures.history.js?v=6"></script>
+  <script src="app.measures.history.page.js?v=6"></script>
+
+  <script>
+    renderAll();
+    show("workout");
+    initGoogleLogin();
+        try{ initSettings(); }catch{}
+// ✅ CONTINUA ALLENAMENTO (card dentro l'app)
+(function setupResumeWorkoutCard(){
+  const card = document.getElementById("resumeWorkoutCard");
+  const meta = document.getElementById("resumeWorkoutMeta");
+  const doneEl = document.getElementById("resumeWorkoutDone");
+  const btnGo = document.getElementById("btnResumeWorkout");
+  const btnDel = document.getElementById("btnDiscardResumeWorkout");
+  if(!card || !meta || !doneEl || !btnGo || !btnDel) return;
+
+  function refresh(){
+    if(!state || !state.draft){
+      card.classList.add("hidden");
+      return;
+    }
+
+    const dayName = (getDay(state.draft.dayId)?.name || state.draft.dayId || "Scheda");
+    const c = (typeof countDone === "function") ? countDone(state.draft) : {done:0,total:0};
+
+    meta.textContent = `📅 ${fmtDate(state.draft.date)} • ${dayName}`;
+    doneEl.textContent = `Set: ${c.done}/${c.total}`;
+
+    // mostra card
+    card.classList.remove("hidden");
+  }
+
+  btnGo.onclick = ()=>{
+    if(!state.draft) return;
+
+    // se mancasse startedAt (vecchie bozze), lo settiamo ora
+    if(!state.draft.startedAt) state.draft.startedAt = Date.now();
+    save();
+
+    // vai in workout + avvia timer live
+    show("workout");
+    try{ startWorkoutTimer(); }catch{}
+    try{ hapticMedium(); }catch{}
+
+    card.classList.add("hidden");
+  };
+
+  btnDel.onclick = ()=>{
+    if(!state.draft) return;
+    state.draft = null;
+    try{ stopWorkoutTimer(); }catch{}
+    save();
+    renderAll();
+    try{ hapticMedium(); }catch{}
+
+    card.classList.add("hidden");
+  };
+
+  // prima render
+  refresh();
+})();
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(()=>{});
+      });
+    }
+  </script>
+</body>
+</html>
