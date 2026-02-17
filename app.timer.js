@@ -17,44 +17,50 @@
     let remainingSeconds = parseInt(restInput.value || "90", 10);
     let endAt = 0;
 
-    // ✅ Audio context (iPhone: serve user gesture)
-    let __beepCtx = null;
+    // ✅ AUDIO (iPhone): sblocco con gesto utente
+    let audioCtx = null;
+    let audioUnlocked = false;
 
-    function ensureBeepUnlocked(){
+    function unlockAudio(){
       try{
-        const AC = (window.AudioContext || window.webkitAudioContext);
-        if(!AC) return;
+        if (audioUnlocked) return;
 
-        if(!__beepCtx) __beepCtx = new AC();
-        if(__beepCtx.state === "suspended"){
-          __beepCtx.resume().catch(()=>{});
-        }
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+
+        audioCtx = new AC();
+
+        // suono "muto" brevissimo per sbloccare Safari/iOS
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        gain.gain.value = 0.0001;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.01);
+
+        audioUnlocked = true;
       }catch{}
     }
 
     function playBeep(){
       try{
-        const AC = (window.AudioContext || window.webkitAudioContext);
-        if(!AC) return;
+        if (!audioCtx) return;
 
-        if(!__beepCtx) __beepCtx = new AC();
-        // su iPhone spesso è suspended finché non fai resume dopo un gesto utente
-        if(__beepCtx.state === "suspended"){
-          __beepCtx.resume().catch(()=>{});
-        }
-
-        const osc = __beepCtx.createOscillator();
-        const gain = __beepCtx.createGain();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
 
         osc.type = "sine";
         osc.frequency.value = 880; // suono acuto
-        gain.gain.value = 0.12;    // volume basso
+        gain.gain.value = 0.25;    // volume (abbastanza alto ma non esagerato)
 
         osc.connect(gain);
-        gain.connect(__beepCtx.destination);
+        gain.connect(audioCtx.destination);
 
         osc.start();
-        osc.stop(__beepCtx.currentTime + 0.25); // 0.25 secondi
+        osc.stop(audioCtx.currentTime + 0.30); // 0.30 secondi
       }catch{}
     }
 
@@ -70,7 +76,7 @@
 
     function vibrateFinish(){
       try{
-        // Vibrazione SOLO se attiva nelle impostazioni
+        // Vibrazione/Suono SOLO se attiva nelle impostazioni
         if (localStorage.getItem("gt_vibration") !== "off"){
           // Android / molti browser
           if (navigator && typeof navigator.vibrate === "function"){
@@ -164,8 +170,8 @@
 
     // START
     btnStartRest.addEventListener("click", () => {
-      // ✅ iPhone: sblocca audio al gesto utente
-      ensureBeepUnlocked();
+      // ✅ iPhone: sblocca audio col gesto utente
+      unlockAudio();
 
       if (endAt) return; // già in corso
 
