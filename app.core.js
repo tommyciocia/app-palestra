@@ -287,7 +287,7 @@ const sug = suggestNextKg(lastKg, lastReps, t, 2.5);
 return {
   target: t,
   kg: lastKg,
-  reps: lastReps,
+  reps: "",
   done: false,
 
   // ✅ info per UI "Prossima volta"
