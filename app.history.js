@@ -166,7 +166,7 @@ function renderHistory(){
         </div>
 
         <details style="margin-top:10px;">
-          <summary style="cursor:pointer; font-weight:900; color:rgba(255,255,255,.85);">Dettagli</summary>
+         <summary style="cursor:pointer; font-weight:900;">Dettagli</summary>
           <div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
         </details>
       `;
