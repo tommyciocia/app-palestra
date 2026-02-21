@@ -1,5 +1,5 @@
 // sw.js
-const VERSION = "v12"; // ✅ bump: forza update cache
+const VERSION = "v13"; // ✅ bump: forza update cache
 const CACHE = `gym-tracker-cache-${VERSION}`;
 
 // ✅ IMPORTANTISSIMO: stessi identici URL che carichi in index.html (con ?v=...)
@@ -11,7 +11,7 @@ const ASSETS = [
   "./icon-192.png",
   "./icon-512.png",
 
-  "./app.core.js?v=5",
+  "./app.core.js?v=6",
   "./app.settings.js?v=2",
   "./app.workout.js?v=5",
   "./app.timer.js?v=5",
