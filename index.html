@@ -15,7 +15,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
   <title>Gym Tracker</title>
 
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#0b1220" />
 
@@ -32,25 +32,78 @@
       padding: 0;
       background: var(--bg);
     }
-
     body {
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
     }
-
     .main {
-  flex: 1;
-  min-height: 0;
-  padding-bottom: calc(78px + env(safe-area-inset-bottom));
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
+      flex: 1;
+      min-height: 0;
+      padding-bottom: calc(78px + env(safe-area-inset-bottom));
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .main::-webkit-scrollbar { display: none; }
 
+    /* ===== AUTH MODAL ===== */
+    .authCard {
+      width: min(420px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 20px 18px 18px;
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, var(--cardGrad1), var(--cardGrad2));
+      animation: pop .18s ease-out forwards;
+    }
+    .authCard .authIcon  { font-size: 36px; text-align: center; margin-bottom: 6px; }
+    .authCard .authTitle { font-weight: 1000; font-size: 20px; text-align: center; margin-bottom: 4px; }
+    .authCard .authSub   { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 14px; }
+    .authCard .authError {
+      min-height: 18px;
+      font-size: 13px;
+      color: var(--danger);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .authCard .authFooter {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .authCard .authLink {
+      font-size: 13px;
+      color: var(--primary);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      text-decoration: underline;
+    }
+    .authCard .authLink:hover { opacity: .8; }
+    .authStack { display: flex; flex-direction: column; gap: 10px; }
 
-    .main::-webkit-scrollbar {
-      display: none;
+    /* ===== SETTINGS MODAL scrollabile ===== */
+    #settingsModal .modalCard {
+      max-height: 88dvh;
+      overflow-y: auto;
+      text-align: left;
+      padding: 18px 16px 16px;
+    }
+    #settingsModal .modalCard::-webkit-scrollbar { display: none; }
+    #settingsModal .modalCard { scrollbar-width: none; }
+
+    .settingsSectionLabel {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 2px;
+      margin-top: 18px;
     }
   </style>
 </head>
@@ -61,84 +114,78 @@
       <div class="topLogo">🏋️</div>
       <div class="topText">
         <div id="topTitle" class="topTitle">Workout</div>
-        <div id="topSub" class="topSub"></div>
-        <div id="userBadge" class="topSub" style="margin-top:4px;"></div>
+        <div id="topSub"   class="topSub"></div>
+        <div id="userBadge" class="topSub" style="margin-top:4px; font-size:11px; color:var(--primary);"></div>
       </div>
     </div>
 
     <div class="topActions">
-      <button id="btnGoogleIn" type="button" class="iconBtn" title="Accedi con Google">🔒</button>
-      <button id="btnGoogleOut" type="button" class="iconBtn hidden" title="Esci">⎋</button>
-            <button id="btnSettings" type="button" class="iconBtn" title="Impostazioni">⚙️</button>
-</div>
+      <!-- login button (visible when logged out) -->
+      <button id="btnAuthOpen" type="button" class="iconBtn" title="Accedi">🔑</button>
+      <!-- logout button (hidden when logged out) -->
+      <button id="btnAuthOut"  type="button" class="iconBtn hidden" title="Esci">⎋</button>
+      <button id="btnSettings" type="button" class="iconBtn" title="Impostazioni">⚙️</button>
+    </div>
   </header>
 
   <main class="main">
+    <!-- ======= WORKOUT ======= -->
     <section id="view-workout" class="view">
-      <!-- ✅ CONTINUA ALLENAMENTO (compare solo se c'è una bozza) -->
-<div id="resumeWorkoutCard" class="card hidden" style="padding:12px;">
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
-    <div>
-      <div style="font-weight:1000; font-size:16px;">⏸ Allenamento in corso</div>
-      <div id="resumeWorkoutMeta" class="muted" style="font-size:12px; margin-top:6px;">—</div>
-    </div>
-    <div class="badge" id="resumeWorkoutDone" style="white-space:nowrap;">—</div>
-  </div>
-
-  <div class="row" style="margin-top:10px;">
-    <button id="btnResumeWorkout" type="button" class="btn primary flex1" style="height:48px;">▶️ Continua</button>
-    <button id="btnDiscardResumeWorkout" type="button" class="btn ghost danger" style="height:48px;">🗑️ Annulla</button>
-  </div>
-
-  <div class="tiny muted" style="margin-top:8px;">
-    Se hai chiuso per sbaglio, riprendi da dove eri rimasto.
-  </div>
-</div>
+      <div id="resumeWorkoutCard" class="card hidden" style="padding:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+          <div>
+            <div style="font-weight:1000; font-size:16px;">⏸ Allenamento in corso</div>
+            <div id="resumeWorkoutMeta"  class="muted" style="font-size:12px; margin-top:6px;">—</div>
+          </div>
+          <div class="badge" id="resumeWorkoutDone" style="white-space:nowrap;">—</div>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button id="btnResumeWorkout"        type="button" class="btn primary flex1" style="height:48px;">▶️ Continua</button>
+          <button id="btnDiscardResumeWorkout" type="button" class="btn ghost danger"  style="height:48px;">🗑️ Annulla</button>
+        </div>
+        <div class="tiny muted" style="margin-top:8px;">
+          Se hai chiuso per sbaglio, riprendi da dove eri rimasto.
+        </div>
+      </div>
 
       <div class="card">
         <div class="chipsRow">
           <div class="chips" id="dayChips"></div>
           <div class="chipTools">
-            <button id="btnNewDay" type="button" class="iconBtnSm" title="Nuova scheda">➕</button>
-            <button id="btnRenameDay" type="button" class="iconBtnSm" title="Rinomina scheda">✏️</button>
+            <button id="btnNewDay"    type="button" class="iconBtnSm"        title="Nuova scheda">➕</button>
+            <button id="btnRenameDay" type="button" class="iconBtnSm"        title="Rinomina scheda">✏️</button>
             <button id="btnDeleteDay" type="button" class="iconBtnSm danger" title="Elimina scheda">🗑️</button>
           </div>
         </div>
 
         <div class="actionRow">
           <button id="btnAddExercise" type="button" class="btn small">＋ Esercizio</button>
-          <button id="btnSavePlan" type="button" class="btn small">💾 Salva scheda</button>
-          <div class="tiny muted">Se NON inizi l’allenamento vedi la scheda e la puoi modificare.</div>
+          <button id="btnSavePlan"    type="button" class="btn small">💾 Salva scheda</button>
+          <div class="tiny muted">Se NON inizi l'allenamento vedi la scheda e la puoi modificare.</div>
         </div>
 
         <div class="row">
-          <button id="btnStart" type="button" class="btn primary flex1">Inizia allenamento</button>
+          <button id="btnStart"   type="button" class="btn primary flex1">Inizia allenamento</button>
           <button id="btnDiscard" type="button" class="btn ghost danger">Annulla</button>
         </div>
 
-       <!-- ✅ TIMER RECUPERO (più basso + bottoni di fianco, non sborda) -->
-<div class="card" id="restTimerCard" style="margin-top:10px; padding:8px;">
-  <div class="cardTitle" style="margin-bottom:4px;">⏱ Timer recupero</div>
-
-  <div class="row" style="margin-top:6px;">
-    <label class="field flex1">
-      <span>Secondi recupero</span>
-      <input id="restSeconds" class="inp" type="number" value="90" min="10" step="5" style="padding:8px;" />
-    </label>
-  </div>
-
-  <!-- ✅ display + bottoni nella STESSA riga -->
-  <div class="row" style="margin-top:6px; display:flex; align-items:center; gap:10px;">
-    <div id="restDisplay" style="font-size:20px; font-weight:800; min-width:64px;">01:30</div>
-
-    <div style="display:flex; gap:8px; flex:1;">
-      <button id="btnStartRest" type="button" class="btn primary" style="height:34px; padding:6px 10px; width:100%;">Avvia</button>
-      <button id="btnResetRest" type="button" class="btn ghost" style="height:34px; padding:6px 10px; width:100%;">Reset</button>
-    </div>
-  </div>
-</div>
-<!-- ✅ FINE TIMER -->
-
+        <!-- TIMER RECUPERO -->
+        <div class="card" id="restTimerCard" style="margin-top:10px; padding:8px;">
+          <div class="cardTitle" style="margin-bottom:4px;">⏱ Timer recupero</div>
+          <div class="row" style="margin-top:6px;">
+            <label class="field flex1">
+              <span>Secondi recupero</span>
+              <input id="restSeconds" class="inp" type="number" value="90" min="10" step="5" style="padding:8px;" />
+            </label>
+          </div>
+          <div class="row" style="margin-top:6px; display:flex; align-items:center; gap:10px;">
+            <div id="restDisplay" style="font-size:20px; font-weight:800; min-width:64px;">01:30</div>
+            <div style="display:flex; gap:8px; flex:1;">
+              <button id="btnStartRest" type="button" class="btn primary" style="height:34px; padding:6px 10px; width:100%;">Avvia</button>
+              <button id="btnResetRest" type="button" class="btn ghost"   style="height:34px; padding:6px 10px; width:100%;">Reset</button>
+            </div>
+          </div>
+        </div>
 
         <div class="miniRow">
           <div class="mini">
@@ -151,6 +198,14 @@
           </div>
         </div>
 
+        <!-- PROGRESS BAR -->
+        <div class="workoutProgressWrap" id="workoutProgressWrap" style="display:none;">
+          <div class="workoutProgressBar">
+            <div class="workoutProgressFill" id="workoutProgressFill" style="width:0%"></div>
+          </div>
+          <div class="workoutProgressLabel" id="workoutProgressLabel">0%</div>
+        </div>
+
         <button id="btnSave" type="button" class="btn primary w100" style="margin-top:12px;">Salva allenamento</button>
         <div id="workMsg" class="msg"></div>
       </div>
@@ -159,45 +214,46 @@
       <div class="spacer"></div>
     </section>
 
+    <!-- ======= STORICO ======= -->
     <section id="view-history" class="view hidden">
+      <!-- STATS STRIP -->
+      <div class="statsStrip" id="statsStrip">
+        <div class="statBox"><div class="statVal" id="statTotal">—</div><div class="statLbl">Allenamenti</div></div>
+        <div class="statBox"><div class="statVal" id="statStreak">—</div><div class="statLbl">Streak 🔥</div></div>
+        <div class="statBox"><div class="statVal" id="statKg">—</div><div class="statLbl">Ton. sollevate</div></div>
+      </div>
       <div class="card">
         <div class="row">
-          <input id="histSearch" class="inp flex1" placeholder="Scrivi NOME ESATTO esercizio (es. “Leg press”)" />
+          <input id="histSearch" class="inp flex1" placeholder='Scrivi NOME ESATTO esercizio (es. "Leg press")' />
         </div>
-
         <div class="row">
           <select id="histDay" class="inp flex1"></select>
           <button id="btnClearHistory" type="button" class="btn ghost danger">Svuota</button>
         </div>
-
         <div id="chartsWrap" class="chartsWrap hidden">
           <div class="chartCard">
             <div class="chartTitle" id="repChartTitle">Reps</div>
             <canvas id="repChart" height="110"></canvas>
             <div class="tiny muted" id="repChartNote"></div>
           </div>
-
           <div class="chartCard">
             <div class="chartTitle" id="kgChartTitle">Kg</div>
             <canvas id="kgChart" height="110"></canvas>
             <div class="tiny muted" id="kgChartNote"></div>
           </div>
         </div>
-
-        <!-- ✅ AGGIUNTA: bottone PR sotto i grafici -->
         <button id="btnShowPR" type="button" class="btn ghost w100 hidden" style="height:52px; margin-top:10px;">
           🔥 Scopri il PR
         </button>
-
         <div class="tiny muted">
-          Nota: la ricerca è <b>esatta</b>. Se scrivi “leg” non trova nulla: devi scrivere “leg press”.
+          Nota: la ricerca è <b>esatta</b>. Se scrivi "leg" non trova nulla: devi scrivere "leg press".
         </div>
       </div>
-
       <div id="historyList" class="stack"></div>
       <div class="spacer"></div>
     </section>
 
+    <!-- ======= MISURE ======= -->
     <section id="view-measures" class="view hidden">
       <div class="card">
         <div class="row">
@@ -206,73 +262,52 @@
             <input id="mDate" class="inp" type="date" style="height:40px; font-size:15px; padding:8px 12px;" />
           </label>
         </div>
-
         <div class="row">
-          <label class="field flex1">
-            <span>Peso (kg)</span>
+          <label class="field flex1"><span>Peso (kg)</span>
             <input id="mWeight" class="inp" type="number" step="0.1" inputmode="decimal" placeholder="73.0" />
           </label>
-
-          <label class="field flex1">
-            <span>Petto (cm)</span>
+          <label class="field flex1"><span>Petto (cm)</span>
             <input id="mChest" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
         </div>
-
-        <!-- ✅ QUI: al posto di "Braccio (cm)" metto "Vita (cm)" (una sola vita) -->
         <div class="row">
-          <label class="field flex1">
-            <span>Spalle (cm)</span>
+          <label class="field flex1"><span>Spalle (cm)</span>
             <input id="mShoulders" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
-
-          <label class="field flex1">
-            <span>Vita (cm)</span>
+          <label class="field flex1"><span>Vita (cm)</span>
             <input id="mWaist" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
         </div>
-
-        <!-- ✅ Braccio SX/DX -->
         <div class="row">
-          <label class="field flex1">
-            <span>Braccio SX (cm)</span>
+          <label class="field flex1"><span>Braccio SX (cm)</span>
             <input id="mArmL" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
-
-          <label class="field flex1">
-            <span>Braccio DX (cm)</span>
+          <label class="field flex1"><span>Braccio DX (cm)</span>
             <input id="mArmR" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
         </div>
-
-        <!-- ✅ Quad SX/DX -->
         <div class="row">
-          <label class="field flex1">
-            <span>Quad SX (cm)</span>
+          <label class="field flex1"><span>Quad SX (cm)</span>
             <input id="mQuadL" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
-
-          <label class="field flex1">
-            <span>Quad DX (cm)</span>
+          <label class="field flex1"><span>Quad DX (cm)</span>
             <input id="mQuadR" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
         </div>
-
         <div class="row">
-          <button id="btnSaveMeasures" type="button" class="btn primary flex1" style="height:48px;">💾 Salva misure</button>
-          <button id="btnClearMeasures" type="button" class="btn ghost danger flex1" style="height:48px;">🗑️ Svuota storico</button>
+          <button id="btnSaveMeasures"  type="button" class="btn primary flex1"      style="height:48px;">💾 Salva misure</button>
+          <button id="btnClearMeasures" type="button" class="btn ghost danger flex1"  style="height:48px;">🗑️ Svuota storico</button>
         </div>
       </div>
-
       <div class="card">
         <button id="btnOpenMeasuresHistoryPage" type="button" class="btn ghost w100" style="height:56px;">
           Storico misure
         </button>
       </div>
-
       <div class="spacer"></div>
     </section>
 
+    <!-- ======= STORICO MISURE PAGE ======= -->
     <section id="view-measures-history" class="view hidden">
       <div class="card">
         <div class="row" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
@@ -280,100 +315,227 @@
           <button id="btnBackToMeasures" type="button" class="btn ghost">Indietro</button>
         </div>
       </div>
-
       <div id="measuresHistoryList" class="stack" style="margin-top:12px;"></div>
       <div class="spacer"></div>
     </section>
-
   </main>
 
+  <!-- TOAST HOST -->
+  <div class="toastHost" id="toastHost">
+    <div class="toast" id="toastEl"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
   <nav class="bottomNav">
-    <button class="navItem active" data-view="workout" type="button">
+    <button class="navItem active" data-view="workout"  type="button">
       <span class="navIcon">🏋️</span><span class="navTxt">Workout</span>
     </button>
-    <button class="navItem" data-view="history" type="button">
+    <button class="navItem" data-view="history"  type="button">
       <span class="navIcon">🕘</span><span class="navTxt">Storico</span>
     </button>
     <button class="navItem" data-view="measures" type="button">
       <span class="navIcon">📏</span><span class="navTxt">Misure</span>
     </button>
   </nav>
-<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+
+  <!-- MODAL GENERICO -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modalCard">
-      <div class="modalIcon" id="modalIcon">✅</div>
+      <div class="modalIcon"  id="modalIcon">✅</div>
       <div class="modalTitle" id="modalTitle">Ok</div>
-      <div class="modalSub" id="modalSub">...</div>
+      <div class="modalSub"   id="modalSub">...</div>
       <button id="modalBtn" type="button" class="btn primary w100" style="margin-top:14px;">Ok</button>
     </div>
   </div>
 
-<!-- ✅ IMPOSTAZIONI -->
-<div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modalCard">
-    <div class="modalIcon">⚙️</div>
-    <div class="modalTitle">Impostazioni</div>
+  <!-- ===== MODAL AUTH (login / registrazione) ===== -->
+  <div id="authModal" class="modal hidden" role="dialog" aria-modal="true" data-mode="login">
+    <div class="authCard">
+      <div class="authIcon">🔑</div>
+      <div class="authTitle" id="authModalTitle">Accedi</div>
+      <div class="authSub"   id="authModalSub">Accedi per sincronizzare i dati su più dispositivi.</div>
+      <div class="authError" id="authError"></div>
 
-    <div class="settingsBox" style="margin-top:12px;">
-
-      <!-- Tema -->
-      <div class="settingsRow">
-        <div class="settingsLabel">
-          <div style="font-weight:1000;">Tema</div>
-          <div id="themeLabel" class="tiny muted">Nero</div>
+      <div class="authStack">
+        <div class="field">
+          <span>Email</span>
+          <input id="authEmail" class="inp" type="email" inputmode="email" autocomplete="email" placeholder="nome@email.com" />
+        </div>
+        <div class="field">
+          <span>Password</span>
+          <input id="authPass" class="inp" type="password" autocomplete="current-password" placeholder="••••••••" />
         </div>
 
-        <label class="switch" title="Tema chiaro">
-          <input id="themeToggle" type="checkbox" />
-          <span class="slider"></span>
-        </label>
+        <button id="btnAuthDo" type="button" class="btn primary w100" style="height:48px; margin-top:4px;">Accedi</button>
       </div>
 
-      <!-- Lingua -->
-      <div class="settingsRow" style="margin-top:16px;">
-        <div class="settingsLabel">
-          <div style="font-weight:1000;">Lingua</div>
-          <div id="langLabel" class="tiny muted">Italiano</div>
+      <div class="authFooter">
+        <div id="authForgotWrap">
+          <button id="btnForgotPassword" class="authLink" type="button">Password dimenticata?</button>
+        </div>
+        <button id="authSwitchLink" class="authLink" type="button">Non hai un account? Registrati</button>
+        <button type="button" class="btn ghost w100" style="margin-top:4px;" onclick="document.getElementById('authModal').classList.add('hidden')">
+          Annulla
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPOSTAZIONI -->
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalIcon">⚙️</div>
+      <div class="modalTitle">Impostazioni</div>
+
+      <!-- ── SEZIONE: ASPETTO ── -->
+      <div class="settingsSectionLabel">🎨 Aspetto</div>
+      <div class="settingsBox" style="margin-top:6px;">
+        <!-- Tema -->
+        <div class="settingsRow">
+          <div class="settingsLabel">
+            <div style="font-weight:1000;">Tema</div>
+            <div id="themeLabel" class="tiny muted">Nero</div>
+          </div>
+          <label class="switch" title="Tema chiaro">
+            <input id="themeToggle" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <!-- Lingua -->
+        <div class="settingsRow" style="margin-top:16px;">
+          <div class="settingsLabel">
+            <div style="font-weight:1000;">Lingua</div>
+            <div id="langLabel" class="tiny muted">Italiano</div>
+          </div>
+          <select id="langSelect" class="inp" style="width:150px; height:40px;">
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="en">🇬🇧 English</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── SEZIONE: ALLENAMENTO ── -->
+      <div class="settingsSectionLabel" style="margin-top:16px;">🏋️ Allenamento</div>
+      <div class="settingsBox" style="margin-top:6px;">
+
+        <!-- Step progressione kg -->
+        <div class="settingsRow">
+          <div class="settingsLabel">
+            <div style="font-weight:1000;">Step progressione (kg)</div>
+            <div class="tiny muted">Quanto aumentare/diminuire i kg</div>
+          </div>
+          <select id="kgStepSelect" class="inp" style="width:100px; height:40px;">
+            <option value="1">1 kg</option>
+            <option value="1.25">1.25 kg</option>
+            <option value="2.5" selected>2.5 kg</option>
+            <option value="5">5 kg</option>
+          </select>
         </div>
 
-        <select id="langSelect" class="inp" style="width:150px; height:40px;">
-          <option value="it">🇮🇹 Italiano</option>
-          <option value="en">🇬🇧 English</option>
-        </select>
+        <!-- Timer recupero default -->
+        <div class="settingsRow" style="margin-top:16px;">
+          <div class="settingsLabel">
+            <div style="font-weight:1000;">Timer recupero default</div>
+            <div class="tiny muted">Secondi preimpostati al timer</div>
+          </div>
+          <select id="restDefaultSelect" class="inp" style="width:100px; height:40px;">
+            <option value="60">60s</option>
+            <option value="90" selected>90s</option>
+            <option value="120">120s</option>
+            <option value="180">180s</option>
+            <option value="240">240s</option>
+          </select>
+        </div>
+
+        <!-- Conferma salvataggio -->
+        <div class="settingsRow" style="margin-top:16px;">
+          <div class="settingsLabel">
+            <div style="font-weight:1000;">Chiedi conferma al salvataggio</div>
+            <div class="tiny muted">Mostra dialogo prima di salvare</div>
+          </div>
+          <label class="switch">
+            <input id="confirmSaveToggle" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Keep screen awake -->
+        <div class="settingsRow" style="margin-top:16px;">
+          <div class="settingsLabel">
+            <div style="font-weight:1000;">Schermo sempre acceso</div>
+            <div class="tiny muted">Durante l'allenamento (se supportato)</div>
+          </div>
+          <label class="switch">
+            <input id="wakeLockToggle" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Vibrazione -->
+        <div class="settingsRow" style="margin-top:16px;">
+          <div class="settingsLabel">
+            <div style="font-weight:1000;">Vibrazione/suono timer</div>
+            <div class="tiny muted">Attiva vibrazione a fine recupero</div>
+          </div>
+          <label class="switch">
+            <input id="vibrationToggle" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
       </div>
-<!-- Vibrazione -->
-<div class="settingsRow" style="margin-top:16px;">
-  <div class="settingsLabel">
-    <div style="font-weight:1000;">Vibrazione/suono timer</div>
-    <div class="tiny muted">Attiva vibrazione se supportato</div>
+
+      <!-- ── SEZIONE: DATI ── -->
+      <div class="settingsSectionLabel" style="margin-top:16px;">💾 Dati</div>
+      <div class="settingsBox" style="margin-top:6px;">
+
+        <!-- Backup JSON -->
+        <div class="settingsRow">
+          <div class="settingsLabel">
+            <div style="font-weight:1000;">Esporta backup</div>
+            <div class="tiny muted">Scarica tutti i tuoi dati in JSON</div>
+          </div>
+          <button id="btnExportData" type="button" class="btn small" style="white-space:nowrap;">📤 Esporta</button>
+        </div>
+
+        <!-- Import JSON -->
+        <div class="settingsRow" style="margin-top:16px;">
+          <div class="settingsLabel">
+            <div style="font-weight:1000;">Importa backup</div>
+            <div class="tiny muted">Ripristina da un file JSON</div>
+          </div>
+          <label class="btn small" style="cursor:pointer; white-space:nowrap;">
+            📥 Importa
+            <input id="importFileInput" type="file" accept=".json" style="display:none;" />
+          </label>
+        </div>
+
+        <!-- Reset app -->
+        <div class="settingsRow" style="margin-top:16px;">
+          <div class="settingsLabel">
+            <div style="font-weight:1000; color:var(--danger);">Reset completo</div>
+            <div class="tiny muted">Cancella tutti i dati dell'app</div>
+          </div>
+          <button id="btnResetApp" type="button" class="btn small danger" style="white-space:nowrap;">🗑️ Reset</button>
+        </div>
+      </div>
+
+      <div style="margin-top:18px; text-align:center;">
+        <div class="tiny muted">Gym Tracker</div>
+        <div style="font-size:12px; opacity:.6;">Versione 1.0</div>
+      </div>
+
+      <button id="btnSettingsClose" type="button" class="btn primary w100" style="margin-top:14px;">Chiudi</button>
+    </div>
   </div>
 
-  <label class="switch">
-    <input id="vibrationToggle" type="checkbox" />
-    <span class="slider"></span>
-  </label>
-</div>
-
-    </div>
-
-    <!-- ✅ VERSIONE (qui, dentro il modal) -->
-    <div style="margin-top:18px; text-align:center;">
-      <div class="tiny muted">Gym Tracker</div>
-      <div style="font-size:12px; opacity:.6;">Versione 1.0</div>
-    </div>
-
-    <!-- ✅ UN SOLO BOTTONE CHIUDI -->
-    <button id="btnSettingsClose" type="button" class="btn primary w100" style="margin-top:14px;">Chiudi</button>
-  </div>
-</div>
-<!-- ✅ FINE IMPOSTAZIONI -->
-
-
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
 
-  <script src="app.core.js?v=6"></script>
-    <script src="app.settings.js?v=2"></script>
-<script src="app.workout.js?v=5"></script>
+  <script src="app.core.js?v=7"></script>
+  <script src="app.settings.js?v=2"></script>
+  <script src="app.workout.js?v=5"></script>
   <script src="app.timer.js?v=5"></script>
   <script src="app.history.js?v=5"></script>
   <script src="app.measures.js?v=6"></script>
@@ -383,62 +545,50 @@
   <script>
     renderAll();
     show("workout");
-    initGoogleLogin();
-        try{ initSettings(); }catch{}
-// ✅ CONTINUA ALLENAMENTO (card dentro l'app)
-(function setupResumeWorkoutCard(){
-  const card = document.getElementById("resumeWorkoutCard");
-  const meta = document.getElementById("resumeWorkoutMeta");
-  const doneEl = document.getElementById("resumeWorkoutDone");
-  const btnGo = document.getElementById("btnResumeWorkout");
-  const btnDel = document.getElementById("btnDiscardResumeWorkout");
-  if(!card || !meta || !doneEl || !btnGo || !btnDel) return;
+    initEmailLogin();
+    try{ initSettings(); }catch{}
 
-  function refresh(){
-    if(!state || !state.draft){
-      card.classList.add("hidden");
-      return;
-    }
+    /* ===== CONTINUA ALLENAMENTO ===== */
+    (function setupResumeWorkoutCard(){
+      const card   = document.getElementById("resumeWorkoutCard");
+      const meta   = document.getElementById("resumeWorkoutMeta");
+      const doneEl = document.getElementById("resumeWorkoutDone");
+      const btnGo  = document.getElementById("btnResumeWorkout");
+      const btnDel = document.getElementById("btnDiscardResumeWorkout");
+      if(!card || !meta || !doneEl || !btnGo || !btnDel) return;
 
-    const dayName = (getDay(state.draft.dayId)?.name || state.draft.dayId || "Scheda");
-    const c = (typeof countDone === "function") ? countDone(state.draft) : {done:0,total:0};
+      function refresh(){
+        if(!state || !state.draft){ card.classList.add("hidden"); return; }
+        const dayName = (getDay(state.draft.dayId)?.name || state.draft.dayId || "Scheda");
+        const c = (typeof countDone==="function") ? countDone(state.draft) : {done:0,total:0};
+        meta.textContent  = `📅 ${fmtDate(state.draft.date)} • ${dayName}`;
+        doneEl.textContent = `Set: ${c.done}/${c.total}`;
+        card.classList.remove("hidden");
+      }
 
-    meta.textContent = `📅 ${fmtDate(state.draft.date)} • ${dayName}`;
-    doneEl.textContent = `Set: ${c.done}/${c.total}`;
+      btnGo.onclick = ()=>{
+        if(!state.draft) return;
+        if(!state.draft.startedAt) state.draft.startedAt = Date.now();
+        save();
+        show("workout");
+        try{ startWorkoutTimer(); }catch{}
+        try{ hapticMedium(); }catch{}
+        card.classList.add("hidden");
+      };
 
-    // mostra card
-    card.classList.remove("hidden");
-  }
+      btnDel.onclick = ()=>{
+        if(!state.draft) return;
+        state.draft = null;
+        try{ stopWorkoutTimer(); }catch{}
+        save();
+        renderAll();
+        try{ hapticMedium(); }catch{}
+        card.classList.add("hidden");
+      };
 
-  btnGo.onclick = ()=>{
-    if(!state.draft) return;
+      refresh();
+    })();
 
-    // se mancasse startedAt (vecchie bozze), lo settiamo ora
-    if(!state.draft.startedAt) state.draft.startedAt = Date.now();
-    save();
-
-    // vai in workout + avvia timer live
-    show("workout");
-    try{ startWorkoutTimer(); }catch{}
-    try{ hapticMedium(); }catch{}
-
-    card.classList.add("hidden");
-  };
-
-  btnDel.onclick = ()=>{
-    if(!state.draft) return;
-    state.draft = null;
-    try{ stopWorkoutTimer(); }catch{}
-    save();
-    renderAll();
-    try{ hapticMedium(); }catch{}
-
-    card.classList.add("hidden");
-  };
-
-  // prima render
-  refresh();
-})();
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").catch(()=>{});

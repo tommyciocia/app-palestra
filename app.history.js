@@ -11,9 +11,248 @@ const kgChartTitle = document.getElementById("kgChartTitle");
 const repChartNote = document.getElementById("repChartNote");
 const kgChartNote = document.getElementById("kgChartNote");
 
-// ✅ AGGIUNTA: bottone PR
 const btnShowPR = document.getElementById("btnShowPR");
 let lastPRInfo = null;
+
+/* compat: roundRect su Safari vecchi */
+(function(){
+  try{
+    const p = CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
+    if(p && !p.roundRect){
+      p.roundRect = function(x,y,w,h,r){
+        r = Math.max(0, Math.min(r, Math.min(w,h)/2));
+        this.beginPath();
+        this.moveTo(x+r, y);
+        this.arcTo(x+w, y, x+w, y+h, r);
+        this.arcTo(x+w, y+h, x, y+h, r);
+        this.arcTo(x, y+h, x, y, r);
+        this.arcTo(x, y, x+w, y, r);
+        this.closePath();
+        return this;
+      };
+    }
+  }catch{}
+})();
+
+function formatTimeMMSS(totalSec){
+  totalSec = Number(totalSec) || 0;
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${String(min).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+}
+
+/* ===========================
+   STATS STRIP
+=========================== */
+function computeStats(){
+  const sessions = state.sessions || [];
+  const total = sessions.length;
+
+  // streak: giorni consecutivi con almeno 1 allenamento fino ad oggi
+  const today = todayISO();
+  const datesSet = new Set(sessions.map(s => s.date));
+  let streak = 0;
+  let cur = new Date(today);
+  while(true){
+    const iso = cur.toISOString().slice(0,10);
+    if(datesSet.has(iso)){ streak++; }
+    else { break; }
+    cur.setDate(cur.getDate() - 1);
+  }
+
+  // tonnellaggio totale (kg × reps di ogni set done)
+  let totalKg = 0;
+  for(const sess of sessions){
+    for(const it of (sess.items || [])){
+      for(const s of (it.sets || [])){
+        if(!s.done) continue;
+        const kg   = Number(String(s.kg   || "0").replace(",", "."));
+        const reps = Number(String(s.reps || "0").replace(",", "."));
+        if(Number.isFinite(kg) && Number.isFinite(reps)) totalKg += kg * reps;
+      }
+    }
+  }
+
+  // formatta tonnellaggio
+  let kgLabel;
+  if(totalKg >= 1000000)      kgLabel = (totalKg/1000000).toFixed(1) + "Mt";
+  else if(totalKg >= 1000)    kgLabel = (totalKg/1000).toFixed(1)    + "t";
+  else                        kgLabel = Math.round(totalKg)           + "kg";
+
+  return { total, streak, kgLabel };
+}
+
+function renderStatsStrip(){
+  const { total, streak, kgLabel } = computeStats();
+  const elTotal  = document.getElementById("statTotal");
+  const elStreak = document.getElementById("statStreak");
+  const elKg     = document.getElementById("statKg");
+  if(elTotal)  elTotal.textContent  = total;
+  if(elStreak) elStreak.textContent = streak > 0 ? `${streak}gg` : "—";
+  if(elKg)     elKg.textContent     = kgLabel;
+}
+
+function renderHistoryFilters(){
+  if(!histDay) return;
+  histDay.innerHTML = `<option value="all">Tutti</option>`;
+  for(const d of state.template.days){
+    const opt = document.createElement("option");
+    opt.value = d.id;
+    opt.textContent = d.name;
+    histDay.appendChild(opt);
+  }
+}
+
+function summarize(sess){
+  let done=0,total=0;
+  for(const it of sess.items){
+    total += it.sets.length;
+    done += it.sets.filter(s=>s.done).length;
+  }
+  return {done,total};
+}
+
+function renderHistory(){
+  renderStatsStrip();
+  if(!historyList) return;
+
+  const query = (histSearch?.value||"").trim();
+  const f = histDay?.value || "all";
+
+  const list = [...state.sessions]
+    .sort((a,b)=>b.date.localeCompare(a.date))
+    .filter(sess=>{
+      if(f!=="all" && sess.dayId!==f) return false;
+      if(!query) return true;
+      return sess.items.some(it => isExactExerciseMatch(it.exName, query));
+    });
+
+  historyList.innerHTML = "";
+  if(list.length === 0){
+    historyList.innerHTML = `<div class="card"><div class="muted">Nessun allenamento trovato.</div></div>`;
+    return;
+  }
+
+  // raggruppa per mese
+  const groups = {};
+  for(const sess of list){
+    const key = (sess.date || "").slice(0,7);
+    if(!key) continue;
+    (groups[key] ||= []).push(sess);
+  }
+
+  const monthKeys = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  const MONTH_NAMES = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+
+  monthKeys.forEach((monthKey, mIdx)=>{
+    const mm = parseInt(monthKey.slice(5,7),10) - 1;
+    const yyyy = monthKey.slice(0,4);
+    const monthLabel = `${MONTH_NAMES[mm]} ${yyyy}`;
+    const monthCount = groups[monthKey].length;
+
+    const wrap = document.createElement("div");
+    wrap.className = "card";
+    wrap.style.padding = "10px 12px";
+    wrap.style.marginBottom = "12px";
+
+    const header = document.createElement("button");
+    header.type = "button";
+    header.className = "btn ghost w100";
+    header.style.cssText = "display:flex; align-items:center; justify-content:space-between; gap:10px; height:52px;";
+
+    const left = document.createElement("div");
+    left.style.cssText = "display:flex; align-items:center; gap:8px; font-weight:900;";
+    left.innerHTML = `📅 ${monthLabel} <span class="monthBadge">${monthCount} allenament${monthCount===1?"o":"i"}</span>`;
+
+    const right = document.createElement("div");
+    right.style.cssText = "opacity:.75; font-weight:900; font-size:18px;";
+
+    header.appendChild(left);
+    header.appendChild(right);
+
+    const body = document.createElement("div");
+    body.style.cssText = "margin-top:10px; display:flex; flex-direction:column; gap:10px;";
+
+    // apri il mese più recente di default
+    const isOpen = mIdx === 0;
+    body.classList.toggle("hidden", !isOpen);
+    right.textContent = isOpen ? "▾" : "▸";
+
+    header.onclick = ()=>{
+      const isHidden = body.classList.contains("hidden");
+      body.classList.toggle("hidden", !isHidden);
+      right.textContent = isHidden ? "▾" : "▸";
+    };
+
+    for(const sess of groups[monthKey]){
+      const dayName = getDay(sess.dayId)?.name || sess.dayId;
+      const {done,total} = summarize(sess);
+      const pct = total ? Math.round((done/total)*100) : 0;
+      const exLine = sess.items.map(it=>it.exName).join(" • ");
+      const dur = sess.durationSec ? ` • ⏱ ${formatTimeMMSS(sess.durationSec)}` : "";
+
+      const box = document.createElement("div");
+      box.className = "historyItem";
+      box.innerHTML = `
+        <div class="historyTop">
+          <div style="flex:1; min-width:0;">
+            <div class="historyTitle">${fmtDate(sess.date)} • ${esc(dayName)}${dur}</div>
+            <div class="historyMeta" style="margin-top:4px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="flex:1; height:6px; border-radius:999px; background:var(--border); overflow:hidden;">
+                  <div style="height:100%; width:${pct}%; background:var(--primary); border-radius:999px;"></div>
+                </div>
+                <span style="font-size:11px; white-space:nowrap;">${done}/${total} set</span>
+              </div>
+            </div>
+            <div class="historyMeta" style="margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(exLine)}</div>
+          </div>
+          <button class="btn ghost danger" style="padding:10px 12px; flex-shrink:0;">🗑️</button>
+        </div>
+
+        <details style="margin-top:10px;">
+          <summary style="cursor:pointer; font-weight:900; user-select:none;">Dettagli ▸</summary>
+          <div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
+        </details>
+      `;
+
+      // toggle summary arrow
+      const det = box.querySelector("details");
+      const sum = box.querySelector("summary");
+      det.addEventListener("toggle", ()=>{
+        sum.textContent = det.open ? "Dettagli ▾" : "Dettagli ▸";
+      });
+
+      box.querySelector("button").onclick = ()=>{
+        if(!confirm(`Eliminare allenamento del ${fmtDate(sess.date)}?`)) return;
+        state.sessions = state.sessions.filter(s => s !== sess);
+        save(); renderAll(); hapticMedium();
+      };
+
+      const inner = box.querySelector("details > div");
+      sess.items.forEach(it=>{
+        const lines = it.sets.map((s,i)=>{
+          const kg   = (s.kg   && String(s.kg).trim()   !== "") ? `${s.kg}kg`  : "—kg";
+          const reps = (s.reps && String(s.reps).trim() !== "") ? s.reps        : "—";
+          const tgt  = s.target || "—";
+          return `Set ${i+1} (${tgt}) • ${kg} • ${reps} reps ${s.done ? "✅":"⬜️"}`;
+        }).join("<br>");
+        const d = document.createElement("div");
+        d.className = "exercise";
+        d.innerHTML =
+          `<div class="exerciseName">${esc(it.exName)}</div><div class="historyMeta" style="margin-top:8px;">${lines}</div>` +
+          (it.comment ? `<div class="historyMeta" style="margin-top:6px;">💬 ${esc(it.comment)}</div>` : ``);
+        inner.appendChild(d);
+      });
+
+      body.appendChild(box);
+    }
+
+    wrap.appendChild(header);
+    wrap.appendChild(body);
+    historyList.appendChild(wrap);
+  });
+}
 
 /* ✅ compat: roundRect su Safari vecchi */
 (function(){
@@ -306,6 +545,16 @@ function niceTicks(minV, maxV, steps){
 
 function drawLineChart(canvas, labels, values, yLabel){
   const {ctx, w, h, dpr} = setupCanvas(canvas);
+  const isLight = !!document.documentElement.getAttribute("data-theme");
+
+  const textColor  = isLight ? "rgba(50,50,80,.75)"    : "rgba(255,255,255,.60)";
+  const gridColor  = isLight ? "rgba(0,0,0,.07)"       : "rgba(255,255,255,.08)";
+  const axisColor  = isLight ? "rgba(0,0,0,.15)"       : "rgba(255,255,255,.14)";
+  const dotColor   = isLight ? "rgba(30,30,60,.85)"    : "rgba(255,255,255,.92)";
+  const lineColor  = isLight ? "rgba(37,99,235,.95)"   : "rgba(86,165,255,.95)";
+  const fillColor  = isLight ? "rgba(37,99,235,.08)"   : "rgba(86,165,255,.12)";
+  const labelColor = isLight ? "rgba(50,50,80,.60)"    : "rgba(255,255,255,.70)";
+  const bgColor    = isLight ? "rgba(0,0,0,.03)"       : "rgba(0,0,0,.12)";
 
   const padL = 34, padR = 10, padT = 10, padB = 22;
   const plotW = w - padL - padR;
@@ -334,7 +583,7 @@ function drawLineChart(canvas, labels, values, yLabel){
   const xFor = (i)=> padL + (plotW * (n===1 ? 0 : i/(n-1)));
   const yFor = (v)=> padT + (plotH * (1 - (v-tickInfo.min)/(tickInfo.max-tickInfo.min)));
 
-  ctx.fillStyle = "rgba(0,0,0,.12)";
+  ctx.fillStyle = bgColor;
   ctx.fillRect(padL, padT, plotW, plotH);
 
   ctx.lineWidth = 1;
@@ -342,18 +591,18 @@ function drawLineChart(canvas, labels, values, yLabel){
 
   for(const v of tickInfo.ticks){
     const y = yFor(v);
-    ctx.strokeStyle = "rgba(255,255,255,.08)";
+    ctx.strokeStyle = gridColor;
     ctx.beginPath();
     ctx.moveTo(padL, y);
     ctx.lineTo(padL + plotW, y);
     ctx.stroke();
 
-    ctx.fillStyle = "rgba(255,255,255,.60)";
+    ctx.fillStyle = textColor;
     const txt = (yLabel === "reps") ? String(Math.round(v)) : v.toFixed(1);
     ctx.fillText(txt, 4, y + 4);
   }
 
-  ctx.strokeStyle = "rgba(255,255,255,.14)";
+  ctx.strokeStyle = axisColor;
   ctx.beginPath();
   ctx.moveTo(padL, padT);
   ctx.lineTo(padL, padT + plotH);
@@ -372,10 +621,10 @@ function drawLineChart(canvas, labels, values, yLabel){
   for(const p of linePts){ ctx.lineTo(p.x, p.y); }
   ctx.lineTo(linePts[linePts.length-1].x, padT + plotH);
   ctx.closePath();
-  ctx.fillStyle = "rgba(86,165,255,.12)";
+  ctx.fillStyle = fillColor;
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(86,165,255,.95)";
+  ctx.strokeStyle = lineColor;
   ctx.lineWidth = 2;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
@@ -384,7 +633,7 @@ function drawLineChart(canvas, labels, values, yLabel){
   for(const p of linePts.slice(1)){ ctx.lineTo(p.x, p.y); }
   ctx.stroke();
 
-  ctx.fillStyle = "rgba(255,255,255,.92)";
+  ctx.fillStyle = dotColor;
   for(const p of linePts){
     ctx.beginPath();
     ctx.arc(p.x, p.y, 2.5, 0, Math.PI*2);
@@ -392,13 +641,13 @@ function drawLineChart(canvas, labels, values, yLabel){
   }
 
   const last = linePts[linePts.length-1];
-  ctx.strokeStyle = "rgba(255,255,255,.95)";
+  ctx.strokeStyle = lineColor;
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(last.x, last.y, 5, 0, Math.PI*2);
   ctx.stroke();
 
-  ctx.fillStyle = "rgba(255,255,255,.70)";
+  ctx.fillStyle = labelColor;
   ctx.font = "10px system-ui";
   ctx.fillText(yLabel, padL + 4, padT + 12);
 
@@ -585,21 +834,27 @@ function renderCharts(){
   kgChart && attachChartTooltip(kgChart);
 
   const validReps = series.reps.filter(Number.isFinite);
-  const validKg = series.kgs.filter(Number.isFinite);
-  const validPR = series.pr1rm.filter(Number.isFinite);
+  const validKg   = series.kgs.filter(Number.isFinite);
+  const validPR   = series.pr1rm.filter(Number.isFinite);
+
+  function trendStr(arr){
+    if(arr.length < 2) return "";
+    const first = arr[0], last = arr[arr.length-1];
+    if(first === 0) return "";
+    const pct = ((last - first) / first * 100).toFixed(1);
+    return Number(pct) > 0 ? ` ↑${pct}%` : Number(pct) < 0 ? ` ↓${Math.abs(pct)}%` : " →0%";
+  }
 
   if(repChartNote){
     repChartNote.textContent = validReps.length
-      ? `min ${Math.min(...validReps)} • max ${Math.max(...validReps)}`
+      ? `min ${Math.min(...validReps)} • max ${Math.max(...validReps)}${trendStr(validReps)}`
       : "Nessun dato reps";
   }
-
-  // ✅ sotto il grafico kg lasciamo SOLO min/max (pulito)
   if(kgChartNote){
     if(validKg.length){
       const minKg = Math.min(...validKg);
       const maxKg = Math.max(...validKg);
-      kgChartNote.textContent = `min ${minKg} • max ${maxKg}`;
+      kgChartNote.textContent = `min ${minKg} • max ${maxKg}${trendStr(validKg)}`;
     }else{
       kgChartNote.textContent = "Nessun dato kg";
     }

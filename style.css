@@ -512,33 +512,116 @@ canvas{
 }
 .navItem.active::before{ opacity:1; }
 
-/* toast (solo CSS: non fa nulla finché non lo usi) */
+/* ===== TOAST ===== */
 .toastHost{
   position: fixed;
   left: 0; right: 0;
-  bottom: calc(64px + env(safe-area-inset-bottom));
+  bottom: calc(74px + env(safe-area-inset-bottom));
   display: grid;
   place-items: center;
   pointer-events: none;
   z-index: 9999;
 }
 .toast{
-  max-width: min(92vw, 520px);
-  background: rgba(0,0,0,.55);
-  backdrop-filter: blur(10px);
+  max-width: min(92vw, 400px);
+  background: rgba(15,22,40,.88);
+  backdrop-filter: blur(14px);
   border: 1px solid rgba(255,255,255,.16);
   color: rgba(255,255,255,.95);
-  padding: 10px 12px;
-  border-radius: 14px;
-  box-shadow: 0 18px 60px rgba(0,0,0,.35);
+  padding: 11px 16px;
+  border-radius: 16px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.40);
   font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   opacity: 0;
-  transform: translateY(6px);
-  transition: opacity .16s ease, transform .16s ease;
+  transform: translateY(8px) scale(.97);
+  transition: opacity .18s ease, transform .18s ease;
 }
 .toast.show{
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+}
+
+/* ===== WORKOUT PROGRESS BAR ===== */
+.workoutProgressWrap{
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.workoutProgressBar{
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.workoutProgressFill{
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), color-mix(in srgb, var(--primary) 70%, #00ffaa));
+  transition: width .3s cubic-bezier(.4,0,.2,1);
+  min-width: 0;
+}
+.workoutProgressLabel{
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ===== SET ROW done animation ===== */
+.setRow.justDone .kgInp,
+.setRow.justDone .reps{
+  border-color: color-mix(in srgb, #2ecc71 55%, var(--border));
+  background: color-mix(in srgb, #2ecc71 8%, transparent);
+  transition: border-color .25s, background .25s;
+}
+
+/* ===== STATS STRIP (storico) ===== */
+.statsStrip{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.statBox{
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 10px 8px;
+  text-align: center;
+  background: var(--panel3);
+}
+.statVal{
+  font-weight: 1000;
+  font-size: 18px;
+  line-height: 1.1;
+}
+.statLbl{
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 900;
+  margin-top: 3px;
+  letter-spacing: .3px;
+}
+
+/* ===== GRAFICI light-mode fix ===== */
+html[data-theme="light"] canvas{
+  background: #f9fafb;
+}
+
+/* month badge nel gruppo storico */
+.monthBadge{
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 900;
+  background: var(--badgeBg);
+  border: 1px solid var(--border);
+  padding: 3px 8px;
+  border-radius: 999px;
 }
 /* 🔒 In modalità scheda (prima di iniziare allenamento)
    mostra SOLO il nome esercizio */

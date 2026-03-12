@@ -1,17 +1,16 @@
 // sw.js
-const VERSION = "v13"; // ✅ bump: forza update cache
+const VERSION = "v14"; // bump: email login + firestore sync
 const CACHE = `gym-tracker-cache-${VERSION}`;
 
-// ✅ IMPORTANTISSIMO: stessi identici URL che carichi in index.html (con ?v=...)
 const ASSETS = [
   "./",
   "./index.html",
-  "./style.css?v=16",
+  "./style.css?v=18",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
 
-  "./app.core.js?v=6",
+  "./app.core.js?v=7",
   "./app.settings.js?v=2",
   "./app.workout.js?v=5",
   "./app.timer.js?v=5",
