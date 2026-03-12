@@ -121,36 +121,36 @@ function setTemplateTarget(dayId, exName, idx, value){
 
 /* Days CRUD */
 btnNewDay && (btnNewDay.onclick = ()=>{
-  if(state.draft){ openModal({ icon:"⚠️", title:"Prima salva/annulla", sub:"Non puoi creare una scheda mentre hai una bozza in corso." }); return; }
-  const name = (prompt("Nome nuova scheda (es. ARMS, GLUTES, FULL BODY):") || "").trim();
+  if(state.draft){ openModal({ icon:"⚠️", title:t("modal_draft_block_title"), sub:t("modal_draft_block_sub") }); return; }
+  const name = (prompt(t("prompt_new_day")) || "").trim();
   if(!name) return;
   const id = uniqueDayId(name);
   state.template.days.push({ id, name, exercises:[] });
   state.currentDayId = id;
   save(); renderAll(); hapticMedium();
-  showToast("➕", `Scheda "${name}" creata`);
+  showToast("➕", t("toast_plan_created",{name}));
 });
 
 btnRenameDay && (btnRenameDay.onclick = ()=>{
   const day = getDay(state.currentDayId);
   if(!day) return;
-  const newName = (prompt("Nuovo nome scheda:", day.name) || "").trim();
+  const newName = (prompt(t("prompt_rename_day"), day.name) || "").trim();
   if(!newName || newName === day.name) return;
   day.name = newName;
   save(); renderAll(); hapticMedium();
-  showToast("✏️", `Rinominata: ${newName}`);
+  showToast("✏️", t("toast_plan_renamed",{name:newName}));
 });
 
 btnDeleteDay && (btnDeleteDay.onclick = ()=>{
   const day = getDay(state.currentDayId);
   if(!day) return;
-  if(state.template.days.length === 1){ openModal({ icon:"⚠️", title:"Non puoi", sub:"Deve rimanere almeno 1 scheda." }); return; }
-  if(state.draft && state.draft.dayId === day.id){ openModal({ icon:"⚠️", title:"Bozza in corso", sub:"Annulla o salva l'allenamento prima di eliminare questa scheda." }); return; }
-  if(!confirm(`Eliminare la scheda "${day.name}"?`)) return;
+  if(state.template.days.length === 1){ openModal({ icon:"⚠️", title:t("modal_cant_delete_title"), sub:t("modal_cant_delete_sub") }); return; }
+  if(state.draft && state.draft.dayId === day.id){ openModal({ icon:"⚠️", title:t("modal_draft_running_title"), sub:t("modal_draft_running_sub") }); return; }
+  if(!confirm(t("confirm_delete_day",{name:day.name}))) return;
   state.template.days = state.template.days.filter(d => d.id !== day.id);
   state.currentDayId = state.template.days[0].id;
   save(); renderAll(); hapticMedium();
-  showToast("🗑️", "Scheda eliminata");
+  showToast("🗑️", t("toast_plan_deleted"));
 });
 
 /* Chips */
@@ -171,24 +171,24 @@ function renderChips(){
 btnAddExercise && (btnAddExercise.onclick = ()=>{
   const day = getDay(state.currentDayId);
   if(!day) return;
-  const name = (prompt("Nome esercizio:") || "").trim();
+  const name = (prompt(t("prompt_new_exercise")) || "").trim();
   if(!name) return;
-  if(templateHasExerciseName(day, name)){ openModal({ icon:"⚠️", title:"Esiste già", sub:"C'è già un esercizio con questo nome in questa scheda." }); return; }
-  let sets = parseInt(prompt("Quanti set? (1-10)", "3") || "3", 10);
+  if(templateHasExerciseName(day, name)){ openModal({ icon:"⚠️", title:t("modal_ex_exists_title"), sub:t("modal_ex_exists_sub") }); return; }
+  let sets = parseInt(prompt(t("prompt_sets"), "3") || "3", 10);
   if(!Number.isFinite(sets)) sets = 3;
   sets = Math.max(1, Math.min(10, sets));
   const targets = Array.from({length: sets}, ()=>DEFAULT_TARGET);
   day.exercises.push({ name, targets });
   if(state.draft && state.draft.dayId === day.id){
-    state.draft.items.push({ exName: name, sets: targets.map(t => ({ target:t, kg:"", reps:"", done:false })) });
+    state.draft.items.push({ exName: name, sets: targets.map(t2 => ({ target:t2, kg:"", reps:"", done:false })) });
   }
   save(); renderAll(); hapticMedium();
-  showToast("➕", `${name} aggiunto`);
+  showToast("➕", t("toast_ex_added",{name}));
 });
 
 btnSavePlan && (btnSavePlan.onclick = ()=>{
   save(); hapticLight();
-  showToast("💾", "Scheda salvata");
+  showToast("💾", t("toast_plan_saved"));
 });
 
 /* Header */
@@ -197,7 +197,7 @@ function renderDraftHeader(){
   if(!draftState || !draftDone) return;
   if(!state.draft){
     const dayName = getDay(state.currentDayId)?.name || state.currentDayId;
-    draftState.textContent = `Scheda • ${dayName}`;
+    draftState.textContent = `${t("draft_state_idle")} • ${dayName}`;
     draftDone.textContent = "—";
     return;
   }
@@ -214,7 +214,7 @@ function renderPlanEditor(){
   if(!exerciseList) return;
   exerciseList.innerHTML = "";
   if(!day || day.exercises.length === 0){
-    exerciseList.innerHTML = `<div class="card"><div class="muted">Nessun esercizio in questa scheda. Premi <b>＋ Esercizio</b>.</div></div>`;
+    exerciseList.innerHTML = `<div class="card"><div class="muted">${t("no_exercises")}</div></div>`;
     return;
   }
   day.exercises.forEach(ex=>{
@@ -224,7 +224,7 @@ function renderPlanEditor(){
       <div class="exerciseTop">
         <div>
           <div class="exerciseName">${esc(ex.name)}</div>
-          <div class="badge">${ex.targets.length} set • modifica target qui sotto</div>
+          <div class="badge">${ex.targets.length} set • ${t("plan_badge_hint")}</div>
         </div>
         <div class="exerciseActions">
           <button class="iconTiny" title="Rinomina">✏️</button>
@@ -235,26 +235,26 @@ function renderPlanEditor(){
     `;
     const [btnRename, btnSets, btnDel] = box.querySelectorAll("button.iconTiny");
     btnRename.onclick = ()=>{
-      const newName = (prompt("Nuovo nome esercizio:", ex.name) || "").trim();
+      const newName = (prompt(t("prompt_rename_exercise"), ex.name) || "").trim();
       if(!newName || newName === ex.name) return;
-      if(templateHasExerciseName(day, newName)){ openModal({ icon:"⚠️", title:"Nome già usato", sub:"Esiste già un esercizio con quel nome." }); return; }
+      if(templateHasExerciseName(day, newName)){ openModal({ icon:"⚠️", title:t("modal_name_used_title"), sub:t("modal_name_used_sub") }); return; }
       renameExerciseEverywhere(day.id, ex.name, newName);
       save(); renderAll(); hapticMedium();
-      showToast("✏️", "Rinominato");
+      showToast("✏️", t("toast_renamed"));
     };
     btnSets.onclick = ()=>{
-      let n = parseInt(prompt("Numero set (1-10):", String(ex.targets.length)) || "", 10);
+      let n = parseInt(prompt(t("prompt_change_sets"), String(ex.targets.length)) || "", 10);
       if(!Number.isFinite(n)) return;
       n = Math.max(1, Math.min(10, n));
       setCountEverywhere(day.id, ex.name, n);
       save(); renderAll(); hapticMedium();
-      showToast("🔢", `${n} set`);
+      showToast("🔢", t("toast_sets_changed",{n}));
     };
     btnDel.onclick = ()=>{
-      if(!confirm(`Eliminare "${ex.name}"?`)) return;
+      if(!confirm(t("confirm_delete_exercise",{name:ex.name}))) return;
       deleteExerciseEverywhere(day.id, ex.name);
       save(); renderAll(); hapticMedium();
-      showToast("🗑️", "Eliminato");
+      showToast("🗑️", t("toast_deleted"));
     };
     ex.targets.forEach((t, idx)=>{
       const row = document.createElement("div");
@@ -288,10 +288,10 @@ function renderWorkoutDraft(){
     applyAllWrap.innerHTML = `
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
         <div>
-          <div style="font-weight:900; font-size:13px;">⚡ Suggerimenti progressione</div>
-          <div class="tiny muted" style="margin-top:3px;">Applica i kg suggeriti a tutti gli esercizi</div>
+          <div style="font-weight:900; font-size:13px;">${t("sug_title")}</div>
+          <div class="tiny muted" style="margin-top:3px;">${t("sug_sub")}</div>
         </div>
-        <button id="btnApplyAllSug" type="button" class="btn primary small" style="white-space:nowrap; height:38px;">Applica tutti</button>
+        <button id="btnApplyAllSug" type="button" class="btn primary small" style="white-space:nowrap; height:38px;">${t("sug_apply_all")}</button>
       </div>
     `;
     applyAllWrap.querySelector("#btnApplyAllSug").onclick = ()=>{
@@ -305,7 +305,7 @@ function renderWorkoutDraft(){
         }
       }
       save(); renderAll(); hapticMedium();
-      showToast("⚡", `${count} set aggiornati`);
+      showToast("⚡", t("toast_sug_updated",{count}));
     };
     exerciseList.appendChild(applyAllWrap);
   }
@@ -345,13 +345,13 @@ function renderWorkoutDraft(){
             <div style="margin-top:6px; padding:8px 10px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; ${sugStyle}">
               <div>
                 <div class="tiny" style="font-weight:900;">
-                  Prossima volta: <b>${esc(s0.sugKg)}kg</b> • ${esc(s0.sugNote)}
+                  ${t("next_time")} <b>${esc(s0.sugKg)}kg</b> • ${esc(s0.sugNote)}
                 </div>
                 <div class="tiny muted" style="margin-top:3px;">
-                  Ultima: ${esc(s0.lastKg||"—")}kg × ${esc(s0.lastReps||"—")} reps
+                  ${t("last")} ${esc(s0.lastKg||"—")}kg × ${esc(s0.lastReps||"—")} ${t("reps_lbl")}
                 </div>
               </div>
-              <button type="button" class="btn small primary sugApplyBtn" style="height:34px; white-space:nowrap;">Usa</button>
+              <button type="button" class="btn small primary sugApplyBtn" style="height:34px; white-space:nowrap;">${t("sug_apply")}</button>
             </div>
           ` : `<div class="badge" style="margin-top:4px;">${item.sets.length} set</div>`}
         </div>
@@ -374,7 +374,7 @@ function renderWorkoutDraft(){
           if(cur === "" || cur === last) s.kg = String(s.sugKg);
         }
         save(); renderAll(); hapticLight();
-        showToast("✅", `Kg applicati a ${item.exName}`);
+        showToast("✅", t("toast_kg_applied",{name:item.exName}));
       });
     }
 
@@ -383,30 +383,30 @@ function renderWorkoutDraft(){
     btnRename.onclick = ()=>{
       const dayId = state.draft.dayId;
       const day = getDay(dayId);
-      const newName = (prompt("Nuovo nome esercizio:", item.exName) || "").trim();
+      const newName = (prompt(t("prompt_rename_exercise"), item.exName) || "").trim();
       if(!newName || newName === item.exName) return;
-      if(day && templateHasExerciseName(day, newName)){ openModal({ icon:"⚠️", title:"Nome già usato", sub:"Esiste già un esercizio con quel nome." }); return; }
+      if(day && templateHasExerciseName(day, newName)){ openModal({ icon:"⚠️", title:t("modal_name_used_title"), sub:t("modal_name_used_sub") }); return; }
       renameExerciseEverywhere(dayId, item.exName, newName);
       save(); renderAll(); hapticMedium();
-      showToast("✏️", "Rinominato");
+      showToast("✏️", t("toast_renamed"));
     };
 
     btnSets.onclick = ()=>{
       const dayId = state.draft.dayId;
-      let n = parseInt(prompt("Numero set (1-10):", String(item.sets.length)) || "", 10);
+      let n = parseInt(prompt(t("prompt_change_sets"), String(item.sets.length)) || "", 10);
       if(!Number.isFinite(n)) return;
       n = Math.max(1, Math.min(10, n));
       setCountEverywhere(dayId, item.exName, n);
       save(); renderAll(); hapticMedium();
-      showToast("🔢", `${n} set`);
+      showToast("🔢", t("toast_sets_changed",{n}));
     };
 
     btnDel.onclick = ()=>{
       const dayId = state.draft.dayId;
-      if(!confirm(`Eliminare "${item.exName}"?`)) return;
+      if(!confirm(t("confirm_delete_exercise",{name:item.exName}))) return;
       deleteExerciseEverywhere(dayId, item.exName);
       save(); renderAll(); hapticMedium();
-      showToast("🗑️", "Eliminato");
+      showToast("🗑️", t("toast_deleted"));
     };
 
     item.sets.forEach((s, idx)=>{
@@ -455,7 +455,7 @@ function renderWorkoutDraft(){
     cRow.style.marginTop = "10px";
     cRow.innerHTML = `
       <div class="setLabel">💬</div>
-      <input class="inp commentInp" type="text" placeholder="Commento esercizio..." value="${esc(item.comment || "")}" style="grid-column: 2 / 6;">
+      <input class="inp commentInp" type="text" placeholder="${t("comment_placeholder")}" value="${esc(item.comment || "")}" style="grid-column: 2 / 6;">
     `;
     const cInp = cRow.querySelector("input.commentInp");
     cInp && cInp.addEventListener("input", (e)=>{ item.comment = e.target.value || ""; save(); });
@@ -478,7 +478,7 @@ function renderWorkout(){
 
 /* Actions workout */
 btnStart && (btnStart.onclick = ()=>{
-  if(state.draft){ if(workMsg) workMsg.textContent = "Hai già una bozza in corso."; hapticLight(); return; }
+  if(state.draft){ if(workMsg) workMsg.textContent = t("modal_draft_block_sub"); hapticLight(); return; }
   state.draft = makeDraft(state.currentDayId);
   state.draft.startedAt = Date.now();
   save(); renderAll(); hapticMedium();
@@ -487,19 +487,19 @@ btnStart && (btnStart.onclick = ()=>{
 });
 
 btnDiscard && (btnDiscard.onclick = ()=>{
-  if(!state.draft){ if(workMsg) workMsg.textContent = "Non c'è nessuna bozza."; hapticLight(); return; }
-  if(!confirm("Annullare la bozza? (non verrà salvato nulla)")) return;
+  if(!state.draft){ if(workMsg) workMsg.textContent = t("modal_draft_block_sub"); hapticLight(); return; }
+  if(!confirm(t("confirm_discard_draft"))) return;
   state.draft = null;
   stopWorkoutTimer();
   save(); renderAll(); hapticMedium();
 });
 
 btnSaveWorkout && (btnSaveWorkout.onclick = ()=>{
-  if(!state.draft){ if(workMsg) workMsg.textContent = "Prima devi iniziare."; hapticLight(); return; }
+  if(!state.draft){ if(workMsg) workMsg.textContent = t("modal_draft_block_sub"); hapticLight(); return; }
   const {done, total} = countDone(state.draft);
-  if(done===0 && !confirm("Nessun set spuntato. Salvare lo stesso?")) return;
+  if(done===0 && !confirm(t("confirm_no_sets"))) return;
   if(typeof window.isConfirmSaveEnabled === "function" && window.isConfirmSaveEnabled()){
-    if(!confirm("Vuoi salvare l'allenamento?")) return;
+    if(!confirm(t("confirm_save_workout"))) return;
   }
   if(state.draft.startedAt){
     state.draft.durationSec = Math.floor((Date.now() - state.draft.startedAt) / 1000);
@@ -522,5 +522,5 @@ btnSaveWorkout && (btnSaveWorkout.onclick = ()=>{
     }
   }catch{}
 
-  openModal({ icon:"✅", title:"Allenamento salvato!", sub:`${done}/${total} set completati. Lo trovi nello Storico.` });
+  openModal({ icon:"✅", title:t("modal_saved_title"), sub:t("modal_saved_sub",{done,total}) });
 });

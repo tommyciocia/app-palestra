@@ -29,7 +29,7 @@ btnSaveMeasures && (btnSaveMeasures.onclick = () => {
   // 🔴 controllo se esiste già quella data
   const alreadyExists = (state.measures || []).some(x => x.date === dateValue);
   if (alreadyExists) {
-    openModal({ icon: "⚠️", title: "Ops", sub: "Giorno già aggiunto." });
+    openModal({ icon:"⚠️", title:t("modal_day_already_title"), sub:t("modal_day_already_sub") });
     return;
   }
 
@@ -48,11 +48,7 @@ btnSaveMeasures && (btnSaveMeasures.onclick = () => {
   // se manca anche solo 1 -> blocco
   const missing = required.filter(x => !x.el || !x.el.value || String(x.el.value).trim() === "");
   if (missing.length > 0) {
-    openModal({
-      icon: "⚠️",
-      title: "Compila tutto",
-      sub: "Devi inserire TUTTE le misure prima di salvare."
-    });
+    openModal({ icon:"⚠️", title:t("modal_fill_all_title"), sub:t("modal_fill_all_sub") });
     return;
   }
 
@@ -92,15 +88,11 @@ btnSaveMeasures && (btnSaveMeasures.onclick = () => {
   renderAll();
   hapticMedium();
 
-  openModal({
-    icon: "📏",
-    title: "Misure salvate",
-    sub: "Giorno registrato correttamente."
-  });
+  openModal({ icon:"📏", title:t("modal_measures_saved_title"), sub:t("modal_measures_saved_sub") });
 });
 
 btnClearMeasures && (btnClearMeasures.onclick = () => {
-  if (!confirm("Vuoi davvero svuotare tutto lo storico misure?")) return;
+  if (!confirm(t("confirm_clear_measures"))) return;
 
   state.measures = [];
   save();
@@ -122,11 +114,7 @@ btnClearMeasures && (btnClearMeasures.onclick = () => {
   renderAll();
   hapticMedium();
 
-  openModal({
-    icon: "🗑️",
-    title: "Misure svuotate",
-    sub: "Lo storico misure è stato cancellato."
-  });
+  openModal({ icon:"🗑️", title:t("modal_measures_cleared_title"), sub:t("modal_measures_cleared_sub") });
 });
 
 function safeVal(v, unit) {
@@ -136,18 +124,14 @@ function safeVal(v, unit) {
 
 function deleteMeasureByDate(date) {
   if (!date) return;
-  if (!confirm("Vuoi davvero cancellare queste misure?")) return;
+  if (!confirm(t("confirm_delete_measure"))) return;
 
   state.measures = (state.measures || []).filter(x => x.date !== date);
   save();
   renderAll();
   hapticMedium();
 
-  openModal({
-    icon: "🗑️",
-    title: "Misure eliminate",
-    sub: "La voce è stata rimossa dallo storico."
-  });
+  openModal({ icon:"🗑️", title:t("modal_measure_deleted_title"), sub:t("modal_measure_deleted_sub") });
 }
 
 /* ✅ lista mini nello stesso tab Misure (se la usi ancora da qualche parte) */
@@ -168,13 +152,13 @@ function renderMeasures() {
 
     const armLine =
       (r.armL || r.armR)
-        ? `Br SX: ${safeVal(r.armL, "cm")} • Br DX: ${safeVal(r.armR, "cm")}`
-        : `Braccio: ${safeVal(r.arm, "cm")}`;
+        ? `${t("m_arm_sx")} ${safeVal(r.armL,"cm")} • ${t("m_arm_dx")} ${safeVal(r.armR,"cm")}`
+        : `${t("m_arm_old")} ${safeVal(r.arm,"cm")}`;
 
     const quadLine =
       (r.quadL || r.quadR)
-        ? `Quad SX: ${safeVal(r.quadL, "cm")} • Quad DX: ${safeVal(r.quadR, "cm")}`
-        : `Coscia: ${safeVal(r.thigh, "cm")}`;
+        ? `${t("m_quad_sx")} ${safeVal(r.quadL,"cm")} • ${t("m_quad_dx")} ${safeVal(r.quadR,"cm")}`
+        : `${t("m_thigh_old")} ${safeVal(r.thigh,"cm")}`;
 
     box.innerHTML = `
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">

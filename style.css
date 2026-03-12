@@ -682,8 +682,27 @@ body:not(.workout-active) .exercise .setRow{
   justify-content:space-between;
   align-items:center;
   gap:12px;
+  min-height:48px;
 }
-.settingsLabel{ display:flex; flex-direction:column; gap:4px; }
+.settingsLabel{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  flex:1;
+  min-width:0;
+  overflow-wrap:break-word;
+  word-break:break-word;
+}
+.settingsLabel > div:first-child {
+  font-size:14px;
+  line-height:1.3;
+}
+.settingsRow .btn.small,
+.settingsRow .inp,
+.settingsRow label.btn.small {
+  flex-shrink:0;
+}
+
 
 /* Switch (tema) */
 .switch{

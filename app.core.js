@@ -148,16 +148,16 @@ function openAuthModal(mode){
   m.dataset.mode = mode || "login";
 
   if(mode === "register"){
-    if(title)     title.textContent  = "Registrati";
-    if(subT)      subT.textContent   = "Crea un account per sincronizzare i dati su più dispositivi.";
-    if(btnDo)     btnDo.textContent  = "Crea account";
-    if(lnkSwitch) lnkSwitch.textContent = "Hai già un account? Accedi";
+    if(title)     title.textContent  = (typeof t==="function") ? t("auth_register_title") : "Registrati";
+    if(subT)      subT.textContent   = (typeof t==="function") ? t("auth_register_sub") : "Crea un account per sincronizzare i dati su più dispositivi.";
+    if(btnDo)     btnDo.textContent  = (typeof t==="function") ? t("auth_register_btn") : "Crea account";
+    if(lnkSwitch) lnkSwitch.textContent = (typeof t==="function") ? t("auth_have_account") : "Hai già un account? Accedi";
     if(wrapForgot) wrapForgot.classList.add("hidden");
   } else {
-    if(title)     title.textContent  = "Accedi";
-    if(subT)      subT.textContent   = "Accedi per sincronizzare i dati su più dispositivi.";
-    if(btnDo)     btnDo.textContent  = "Accedi";
-    if(lnkSwitch) lnkSwitch.textContent = "Non hai un account? Registrati";
+    if(title)     title.textContent  = (typeof t==="function") ? t("auth_login_title") : "Accedi";
+    if(subT)      subT.textContent   = (typeof t==="function") ? t("auth_login_sub") : "Accedi per sincronizzare i dati su più dispositivi.";
+    if(btnDo)     btnDo.textContent  = (typeof t==="function") ? t("auth_login_btn") : "Accedi";
+    if(lnkSwitch) lnkSwitch.textContent = (typeof t==="function") ? t("auth_no_account") : "Non hai un account? Registrati";
     if(wrapForgot) wrapForgot.classList.remove("hidden");
   }
 
@@ -180,18 +180,16 @@ async function doAuthAction(){
   const btnDo = document.getElementById("btnAuthDo");
 
   if(!email || !pass){
-    if(err) err.textContent = "Inserisci email e password.";
+    if(err) err.textContent = (typeof t==="function") ? t("err_empty") : "Inserisci email e password.";
     return;
   }
-
-  // nessun campo conferma password: registrazione diretta
 
   if(btnDo) btnDo.disabled = true;
   if(err)   err.textContent = "";
 
   const auth = getAuth();
   if(!auth){
-    if(err) err.textContent = "Firebase non disponibile.";
+    if(err) err.textContent = (typeof t==="function") ? t("err_firebase_unavail") : "Firebase non disponibile.";
     if(btnDo) btnDo.disabled = false;
     return;
   }
@@ -205,16 +203,17 @@ async function doAuthAction(){
     closeAuthModal();
     try{ if(typeof hapticMedium==="function") hapticMedium(); }catch{}
   } catch(e){
+    const _t = (typeof t==="function") ? t : (k,d)=>d;
     const msgs = {
-      "auth/user-not-found":      "Nessun account con questa email.",
-      "auth/wrong-password":      "Password errata.",
-      "auth/email-already-in-use":"Email già registrata.",
-      "auth/weak-password":       "Password troppo corta (min 6 caratteri).",
-      "auth/invalid-email":       "Email non valida.",
-      "auth/invalid-credential":  "Credenziali non valide.",
-      "auth/too-many-requests":   "Troppi tentativi. Riprova più tardi."
+      "auth/user-not-found":      _t("err_user_not_found","Nessun account con questa email."),
+      "auth/wrong-password":      _t("err_wrong_password","Password errata."),
+      "auth/email-already-in-use":_t("err_email_in_use","Email già registrata."),
+      "auth/weak-password":       _t("err_weak_password","Password troppo corta (min 6 caratteri)."),
+      "auth/invalid-email":       _t("err_invalid_email","Email non valida."),
+      "auth/invalid-credential":  _t("err_invalid_cred","Credenziali non valide."),
+      "auth/too-many-requests":   _t("err_too_many","Troppi tentativi. Riprova più tardi.")
     };
-    if(err) err.textContent = msgs[e.code] || ("Errore: " + (e.message || e.code));
+    if(err) err.textContent = msgs[e.code] || (_t("err_prefix","Errore: ") + (e.message || e.code));
   } finally {
     if(btnDo) btnDo.disabled = false;
   }
@@ -224,15 +223,15 @@ async function doForgotPassword(){
   const email = (document.getElementById("authEmail")?.value || "").trim();
   const err   = document.getElementById("authError");
   if(!email){
-    if(err) err.textContent = "Inserisci prima la tua email.";
+    if(err) err.textContent = (typeof t==="function") ? t("forgot_need_email") : "Inserisci prima la tua email.";
     return;
   }
   const auth = getAuth();
   try{
     await auth.sendPasswordResetEmail(email);
-    if(err){ err.style.color = "var(--primary)"; err.textContent = "Email inviata! Controlla la casella."; }
+    if(err){ err.style.color = "var(--primary)"; err.textContent = (typeof t==="function") ? t("forgot_sent") : "Email inviata! Controlla la casella."; }
   }catch(e){
-    if(err){ err.style.color = ""; err.textContent = "Errore: " + (e.message || e.code); }
+    if(err){ err.style.color = ""; err.textContent = ((typeof t==="function") ? t("err_prefix") : "Errore: ") + (e.message || e.code); }
   }
 }
 
@@ -298,7 +297,7 @@ function initEmailLogin(){
           state = remote;
           save();
           try{ renderAll(); }catch{}
-          openModal({ icon:"☁️", title:"Dati sincronizzati", sub:"Dati caricati dal cloud." });
+          openModal({ icon:"☁️", title:(typeof t==="function"?t("modal_import_ok_title"):"Dati sincronizzati"), sub:(typeof t==="function"?t("modal_import_ok_sub"):"Dati caricati dal cloud.") });
         } else if(localSessions > 0){
           // ho dati locali più recenti: li carico sul cloud
           await pushToCloud();
@@ -542,10 +541,13 @@ function show(view){
 
   navItems.forEach(b => b.classList.toggle("active", b.dataset.view===view));
   if(topTitle){
-    topTitle.textContent = view==="workout" ? "Workout" : (view==="history" ? "Storico" : "Misure");
+    const _t = (typeof t==="function") ? t : null;
+    topTitle.textContent = view==="workout" ? "Workout" : (view==="history" ? (_t?_t("top_history"):"Storico") : (_t?_t("top_measures"):"Misure"));
   }
   if(topSub){
-    topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
+    const _t = (typeof t==="function") ? t : null;
+    if(_t) topSub.textContent = _t("top_sub",{s:state.sessions.length,d:state.template.days.length});
+    else   topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
   }
 
   try{ if(view==="workout"  && typeof renderWorkout         === "function") renderWorkout(); }catch{}
@@ -573,6 +575,7 @@ function renderAll(){
   try{ if(typeof renderMeasures       === "function") renderMeasures(); }catch{}
 
   if(topSub){
-    topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
+    if(typeof t==="function") topSub.textContent = t("top_sub",{s:state.sessions.length,d:state.template.days.length});
+    else topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
   }
 }

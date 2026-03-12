@@ -52,12 +52,12 @@
       const hasQuadsLR = (r.quadL && String(r.quadL).trim() !== "") || (r.quadR && String(r.quadR).trim() !== "");
 
       const armLine = hasArmsLR
-        ? `Braccio SX: ${safeVal(r.armL,"cm")} • Braccio DX: ${safeVal(r.armR,"cm")}`
-        : `Braccio: ${safeVal(r.arm,"cm")}`;
+        ? `${t("m_arm_sx")} ${safeVal(r.armL,"cm")} • ${t("m_arm_dx")} ${safeVal(r.armR,"cm")}`
+        : `${t("m_arm_old")} ${safeVal(r.arm,"cm")}`;
 
       const quadLine = hasQuadsLR
-        ? `Quad SX: ${safeVal(r.quadL,"cm")} • Quad DX: ${safeVal(r.quadR,"cm")}`
-        : `Coscia: ${safeVal(r.thigh,"cm")}`;
+        ? `${t("m_quad_sx")} ${safeVal(r.quadL,"cm")} • ${t("m_quad_dx")} ${safeVal(r.quadR,"cm")}`
+        : `${t("m_thigh_old")} ${safeVal(r.thigh,"cm")}`;
 
       content.innerHTML = `
         <div class="historyMeta">Peso: ${safeVal(r.weight,"kg")}</div>
@@ -86,7 +86,7 @@
           if (typeof deleteMeasureByDate === "function") {
             deleteMeasureByDate(r.date);
           } else {
-            if (!confirm("Vuoi davvero cancellare queste misure?")) return;
+            if (!confirm(typeof t==="function"?t("confirm_delete_measure"):"Vuoi davvero cancellare queste misure?")) return;
             state.measures = (state.measures || []).filter(x => x.date !== r.date);
             save();
           }

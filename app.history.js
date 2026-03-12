@@ -88,13 +88,13 @@ function renderStatsStrip(){
   const elStreak = document.getElementById("statStreak");
   const elKg     = document.getElementById("statKg");
   if(elTotal)  elTotal.textContent  = total;
-  if(elStreak) elStreak.textContent = streak > 0 ? `${streak}gg` : "—";
+  if(elStreak) elStreak.textContent = streak > 0 ? `${streak}${(typeof t==="function"?t("streak_suffix"):"gg")}` : "—";
   if(elKg)     elKg.textContent     = kgLabel;
 }
 
 function renderHistoryFilters(){
   if(!histDay) return;
-  histDay.innerHTML = `<option value="all">Tutti</option>`;
+  histDay.innerHTML = `<option value="all">${(typeof t==="function"?t("hist_filter_all"):"Tutti")}</option>`;
   for(const d of state.template.days){
     const opt = document.createElement("option");
     opt.value = d.id;
@@ -129,7 +129,7 @@ function renderHistory(){
 
   historyList.innerHTML = "";
   if(list.length === 0){
-    historyList.innerHTML = `<div class="card"><div class="muted">Nessun allenamento trovato.</div></div>`;
+    historyList.innerHTML = `<div class="card"><div class="muted">${(typeof t==="function"?t("hist_none"):"Nessun allenamento trovato.")}</div></div>`;
     return;
   }
 
@@ -142,7 +142,7 @@ function renderHistory(){
   }
 
   const monthKeys = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
-  const MONTH_NAMES = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+  const MONTH_NAMES = (typeof t==="function") ? t("month_names") : ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
 
   monthKeys.forEach((monthKey, mIdx)=>{
     const mm = parseInt(monthKey.slice(5,7),10) - 1;
@@ -211,7 +211,7 @@ function renderHistory(){
         </div>
 
         <details style="margin-top:10px;">
-          <summary style="cursor:pointer; font-weight:900; user-select:none;">Dettagli ▸</summary>
+          <summary style="cursor:pointer; font-weight:900; user-select:none;">${(typeof t==="function"?t("hist_details"):"Dettagli")} ▸</summary>
           <div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
         </details>
       `;
@@ -220,11 +220,11 @@ function renderHistory(){
       const det = box.querySelector("details");
       const sum = box.querySelector("summary");
       det.addEventListener("toggle", ()=>{
-        sum.textContent = det.open ? "Dettagli ▾" : "Dettagli ▸";
+        sum.textContent = det.open ? (typeof t==="function"?t("hist_details"):"Dettagli")+" ▾" : (typeof t==="function"?t("hist_details"):"Dettagli")+" ▸";
       });
 
       box.querySelector("button").onclick = ()=>{
-        if(!confirm(`Eliminare allenamento del ${fmtDate(sess.date)}?`)) return;
+        if(!confirm((typeof t==="function"?t("confirm_delete_session",{date:fmtDate(sess.date)}):`Eliminare allenamento del ${fmtDate(sess.date)}?`))) return;
         state.sessions = state.sessions.filter(s => s !== sess);
         save(); renderAll(); hapticMedium();
       };
@@ -282,7 +282,7 @@ function formatTimeMMSS(totalSec){
 
 function renderHistoryFilters(){
   if(!histDay) return;
-  histDay.innerHTML = `<option value="all">Tutti</option>`;
+  histDay.innerHTML = `<option value="all">${(typeof t==="function"?t("hist_filter_all"):"Tutti")}</option>`;
   for(const d of state.template.days){
     const opt = document.createElement("option");
     opt.value = d.id;
@@ -316,7 +316,7 @@ function renderHistory(){
 
   historyList.innerHTML = "";
   if(list.length === 0){
-    historyList.innerHTML = `<div class="card"><div class="muted">Nessun allenamento trovato.</div></div>`;
+    historyList.innerHTML = `<div class="card"><div class="muted">${(typeof t==="function"?t("hist_none"):"Nessun allenamento trovato.")}</div></div>`;
     return;
   }
 
@@ -411,7 +411,7 @@ function renderHistory(){
       `;
 
       box.querySelector("button").onclick = ()=>{
-        if(!confirm(`Eliminare allenamento del ${fmtDate(sess.date)}?`)) return;
+        if(!confirm((typeof t==="function"?t("confirm_delete_session",{date:fmtDate(sess.date)}):`Eliminare allenamento del ${fmtDate(sess.date)}?`))) return;
         state.sessions = state.sessions.filter(s => s !== sess);
         save();
         renderAll();
@@ -848,7 +848,7 @@ function renderCharts(){
   if(repChartNote){
     repChartNote.textContent = validReps.length
       ? `min ${Math.min(...validReps)} • max ${Math.max(...validReps)}${trendStr(validReps)}`
-      : "Nessun dato reps";
+      : (typeof t==="function"?t("reps_data_none"):"Nessun dato reps");
   }
   if(kgChartNote){
     if(validKg.length){
@@ -856,7 +856,7 @@ function renderCharts(){
       const maxKg = Math.max(...validKg);
       kgChartNote.textContent = `min ${minKg} • max ${maxKg}${trendStr(validKg)}`;
     }else{
-      kgChartNote.textContent = "Nessun dato kg";
+      kgChartNote.textContent = (typeof t==="function"?t("kg_data_none"):"Nessun dato kg");
     }
   }
 
@@ -885,14 +885,14 @@ histSearch && histSearch.addEventListener("input", ()=>{ renderHistory(); render
 histDay && histDay.addEventListener("change", ()=>{ renderHistory(); renderCharts(); });
 
 btnClearHistory && (btnClearHistory.onclick = ()=>{
-  if(!confirm("Svuotare tutto lo storico?")) return;
+  if(!confirm(typeof t==="function"?t("confirm_clear_history"):"Svuotare tutto lo storico?")) return;
   state.sessions = [];
   save();
   renderAll();
   hapticMedium();
 
   track("history_cleared");
-  openModal({ icon:"🧹", title:"Storico svuotato", sub:"Tutti gli allenamenti sono stati rimossi." });
+  openModal({ icon:"🧹", title:(typeof t==="function"?t("modal_history_cleared_title"):"Storico svuotato"), sub:(typeof t==="function"?t("modal_history_cleared_sub"):"Tutti gli allenamenti sono stati rimossi.") });
 });
 
 // ✅ CLICK bottone PR
@@ -902,15 +902,11 @@ btnShowPR && (btnShowPR.onclick = ()=>{
   const best = lastPRInfo.best.toFixed(1);
   const last = lastPRInfo.last.toFixed(1);
 
-const sub =
-`Esercizio: ${lastPRInfo.ex}
-PR stimato 1RIP: ${best} kg , 
-
-Calcolo (formula): 1RM = kg × (1 + reps/30)`;
+const sub = (typeof t==="function") ? t("modal_pr_sub",{ex:lastPRInfo.ex,best}) : `Esercizio: ${lastPRInfo.ex}\nPR stimato 1RIP: ${best} kg\n\nCalcolo (formula): 1RM = kg × (1 + reps/30)`;
 
 
   if(typeof openModal === "function"){
-    openModal({ icon:"🔥", title:"PR stimato", sub });
+    openModal({ icon:"🔥", title:(typeof t==="function"?t("modal_pr_title"):"PR stimato"), sub });
   }else{
     alert(sub);
   }

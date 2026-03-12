@@ -134,7 +134,7 @@
       <div id="resumeWorkoutCard" class="card hidden" style="padding:12px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
           <div>
-            <div style="font-weight:1000; font-size:16px;">⏸ Allenamento in corso</div>
+            <div data-i18n="resume_title" style="font-weight:1000; font-size:16px;">⏸ Allenamento in corso</div>
             <div id="resumeWorkoutMeta"  class="muted" style="font-size:12px; margin-top:6px;">—</div>
           </div>
           <div class="badge" id="resumeWorkoutDone" style="white-space:nowrap;">—</div>
@@ -143,9 +143,7 @@
           <button id="btnResumeWorkout"        type="button" class="btn primary flex1" style="height:48px;">▶️ Continua</button>
           <button id="btnDiscardResumeWorkout" type="button" class="btn ghost danger"  style="height:48px;">🗑️ Annulla</button>
         </div>
-        <div class="tiny muted" style="margin-top:8px;">
-          Se hai chiuso per sbaglio, riprendi da dove eri rimasto.
-        </div>
+        <div data-i18n="resume_hint" class="tiny muted" style="margin-top:8px;">Se hai chiuso per sbaglio, riprendi da dove eri rimasto.</div>
       </div>
 
       <div class="card">
@@ -258,39 +256,39 @@
       <div class="card">
         <div class="row">
           <label class="field flex1">
-            <span>Data</span>
+            <span id="mDateLabel">Data</span>
             <input id="mDate" class="inp" type="date" style="height:40px; font-size:15px; padding:8px 12px;" />
           </label>
         </div>
         <div class="row">
-          <label class="field flex1"><span>Peso (kg)</span>
+          <label class="field flex1"><span id="mWeightLabel">Peso (kg)</span>
             <input id="mWeight" class="inp" type="number" step="0.1" inputmode="decimal" placeholder="73.0" />
           </label>
-          <label class="field flex1"><span>Petto (cm)</span>
+          <label class="field flex1"><span id="mChestLabel">Petto (cm)</span>
             <input id="mChest" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
         </div>
         <div class="row">
-          <label class="field flex1"><span>Spalle (cm)</span>
+          <label class="field flex1"><span id="mShouldersLabel">Spalle (cm)</span>
             <input id="mShoulders" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
-          <label class="field flex1"><span>Vita (cm)</span>
+          <label class="field flex1"><span id="mWaistLabel">Vita (cm)</span>
             <input id="mWaist" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
         </div>
         <div class="row">
-          <label class="field flex1"><span>Braccio SX (cm)</span>
+          <label class="field flex1"><span id="mArmLLabel">Braccio SX (cm)</span>
             <input id="mArmL" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
-          <label class="field flex1"><span>Braccio DX (cm)</span>
+          <label class="field flex1"><span id="mArmRLabel">Braccio DX (cm)</span>
             <input id="mArmR" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
         </div>
         <div class="row">
-          <label class="field flex1"><span>Quad SX (cm)</span>
+          <label class="field flex1"><span id="mQuadLLabel">Quad SX (cm)</span>
             <input id="mQuadL" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
-          <label class="field flex1"><span>Quad DX (cm)</span>
+          <label class="field flex1"><span id="mQuadRLabel">Quad DX (cm)</span>
             <input id="mQuadR" class="inp" type="number" step="0.1" inputmode="decimal" />
           </label>
         </div>
@@ -393,10 +391,10 @@
         <!-- Tema -->
         <div class="settingsRow">
           <div class="settingsLabel">
-            <div style="font-weight:1000;">Tema</div>
+            <div id="themeRowLabel" style="font-weight:1000;">Tema</div>
             <div id="themeLabel" class="tiny muted">Nero</div>
           </div>
-          <label class="switch" title="Tema chiaro">
+          <label class="switch">
             <input id="themeToggle" type="checkbox" />
             <span class="slider"></span>
           </label>
@@ -404,10 +402,10 @@
         <!-- Lingua -->
         <div class="settingsRow" style="margin-top:16px;">
           <div class="settingsLabel">
-            <div style="font-weight:1000;">Lingua</div>
+            <div id="langRowLabel" style="font-weight:1000;">Lingua</div>
             <div id="langLabel" class="tiny muted">Italiano</div>
           </div>
-          <select id="langSelect" class="inp" style="width:150px; height:40px;">
+          <select id="langSelect" class="inp" style="width:140px; height:44px; font-size:15px;">
             <option value="it">🇮🇹 Italiano</option>
             <option value="en">🇬🇧 English</option>
           </select>
@@ -421,10 +419,10 @@
         <!-- Step progressione kg -->
         <div class="settingsRow">
           <div class="settingsLabel">
-            <div style="font-weight:1000;">Step progressione (kg)</div>
-            <div class="tiny muted">Quanto aumentare/diminuire i kg</div>
+            <div id="kgStepRowLabel" style="font-weight:1000;">Step progressione (kg)</div>
+            <div id="kgStepRowSub" class="tiny muted">Quanto aumentare/diminuire i kg</div>
           </div>
-          <select id="kgStepSelect" class="inp" style="width:100px; height:40px;">
+          <select id="kgStepSelect" class="inp" style="width:100px; height:44px; font-size:15px;">
             <option value="1">1 kg</option>
             <option value="1.25">1.25 kg</option>
             <option value="2.5" selected>2.5 kg</option>
@@ -435,10 +433,10 @@
         <!-- Timer recupero default -->
         <div class="settingsRow" style="margin-top:16px;">
           <div class="settingsLabel">
-            <div style="font-weight:1000;">Timer recupero default</div>
-            <div class="tiny muted">Secondi preimpostati al timer</div>
+            <div id="restDefaultRowLabel" style="font-weight:1000;">Timer recupero default</div>
+            <div id="restDefaultRowSub" class="tiny muted">Secondi preimpostati al timer</div>
           </div>
-          <select id="restDefaultSelect" class="inp" style="width:100px; height:40px;">
+          <select id="restDefaultSelect" class="inp" style="width:100px; height:44px; font-size:15px;">
             <option value="60">60s</option>
             <option value="90" selected>90s</option>
             <option value="120">120s</option>
@@ -450,8 +448,8 @@
         <!-- Conferma salvataggio -->
         <div class="settingsRow" style="margin-top:16px;">
           <div class="settingsLabel">
-            <div style="font-weight:1000;">Chiedi conferma al salvataggio</div>
-            <div class="tiny muted">Mostra dialogo prima di salvare</div>
+            <div id="confirmSaveRowLabel" style="font-weight:1000;">Chiedi conferma al salvataggio</div>
+            <div id="confirmSaveRowSub" class="tiny muted">Mostra dialogo prima di salvare</div>
           </div>
           <label class="switch">
             <input id="confirmSaveToggle" type="checkbox" />
@@ -462,8 +460,8 @@
         <!-- Keep screen awake -->
         <div class="settingsRow" style="margin-top:16px;">
           <div class="settingsLabel">
-            <div style="font-weight:1000;">Schermo sempre acceso</div>
-            <div class="tiny muted">Durante l'allenamento (se supportato)</div>
+            <div id="wakeLockRowLabel" style="font-weight:1000;">Schermo sempre acceso</div>
+            <div id="wakeLockRowSub" class="tiny muted">Durante l'allenamento (se supportato)</div>
           </div>
           <label class="switch">
             <input id="wakeLockToggle" type="checkbox" />
@@ -474,8 +472,8 @@
         <!-- Vibrazione -->
         <div class="settingsRow" style="margin-top:16px;">
           <div class="settingsLabel">
-            <div style="font-weight:1000;">Vibrazione/suono timer</div>
-            <div class="tiny muted">Attiva vibrazione a fine recupero</div>
+            <div id="vibrationRowLabel" style="font-weight:1000;">Vibrazione/suono timer</div>
+            <div id="vibrationRowSub" class="tiny muted">Attiva vibrazione a fine recupero</div>
           </div>
           <label class="switch">
             <input id="vibrationToggle" type="checkbox" />
@@ -491,19 +489,19 @@
         <!-- Backup JSON -->
         <div class="settingsRow">
           <div class="settingsLabel">
-            <div style="font-weight:1000;">Esporta backup</div>
-            <div class="tiny muted">Scarica tutti i tuoi dati in JSON</div>
+            <div id="exportRowLabel" style="font-weight:1000;">Esporta backup</div>
+            <div id="exportRowSub" class="tiny muted">Scarica tutti i tuoi dati in JSON</div>
           </div>
-          <button id="btnExportData" type="button" class="btn small" style="white-space:nowrap;">📤 Esporta</button>
+          <button id="btnExportData" type="button" class="btn small" style="min-width:100px; height:44px;">📤 Esporta</button>
         </div>
 
         <!-- Import JSON -->
         <div class="settingsRow" style="margin-top:16px;">
           <div class="settingsLabel">
-            <div style="font-weight:1000;">Importa backup</div>
-            <div class="tiny muted">Ripristina da un file JSON</div>
+            <div id="importRowLabel" style="font-weight:1000;">Importa backup</div>
+            <div id="importRowSub" class="tiny muted">Ripristina da un file JSON</div>
           </div>
-          <label class="btn small" style="cursor:pointer; white-space:nowrap;">
+          <label id="btnImportLabel" class="btn small" style="cursor:pointer; min-width:100px; height:44px; display:flex; align-items:center; justify-content:center;">
             📥 Importa
             <input id="importFileInput" type="file" accept=".json" style="display:none;" />
           </label>
@@ -512,16 +510,16 @@
         <!-- Reset app -->
         <div class="settingsRow" style="margin-top:16px;">
           <div class="settingsLabel">
-            <div style="font-weight:1000; color:var(--danger);">Reset completo</div>
-            <div class="tiny muted">Cancella tutti i dati dell'app</div>
+            <div id="resetRowLabel" style="font-weight:1000; color:var(--danger);">Reset completo</div>
+            <div id="resetRowSub" class="tiny muted">Cancella tutti i dati dell'app</div>
           </div>
-          <button id="btnResetApp" type="button" class="btn small danger" style="white-space:nowrap;">🗑️ Reset</button>
+          <button id="btnResetApp" type="button" class="btn small danger" style="min-width:100px; height:44px;">🗑️ Reset</button>
         </div>
       </div>
 
       <div style="margin-top:18px; text-align:center;">
         <div class="tiny muted">Gym Tracker</div>
-        <div style="font-size:12px; opacity:.6;">Versione 1.0</div>
+        <div id="appVersion" style="font-size:12px; opacity:.6;">Versione 1.0</div>
       </div>
 
       <button id="btnSettingsClose" type="button" class="btn primary w100" style="margin-top:14px;">Chiudi</button>

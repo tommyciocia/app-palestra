@@ -131,9 +131,9 @@
 
       // Messaggio finale: usa il tuo modal se esiste, altrimenti alert
       if (typeof openModal === "function"){
-        openModal({ icon: "⏱️", title: "Recupero finito", sub: "Vai 💪" });
+        openModal({ icon:"⏱️", title:(typeof t==="function"?t("modal_rest_done_title"):"Recupero finito"), sub:(typeof t==="function"?t("modal_rest_done_sub"):"Vai 💪") });
       } else {
-        alert("Recupero finito 💪");
+        alert(typeof t==="function"?t("modal_rest_done_sub"):"Recupero finito 💪");
       }
     }
 
