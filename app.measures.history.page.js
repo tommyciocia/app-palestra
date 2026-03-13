@@ -1,3 +1,5 @@
+function _t(key){ return (typeof window.t==="function") ? window.t(key) : key; }
+
 // app.measures.history.page.js
 (function () {
   const btnOpen = document.getElementById("btnOpenMeasuresHistoryPage");
@@ -26,7 +28,7 @@
     const all = [...(state.measures || [])].sort((a, b) => b.date.localeCompare(a.date));
 
     if (all.length === 0) {
-      list.innerHTML = `<div class="card"><div class="tiny muted">Nessuna misura salvata.</div></div>`;
+      list.innerHTML = `<div class="card"><div class="tiny muted">${_t("m_none_history")}</div></div>`;
       return;
     }
 
@@ -39,7 +41,7 @@
       header.innerHTML = `
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
           <div class="historyTitle" style="margin:0;">📅 ${fmtDate(r.date)}</div>
-          <div class="tiny muted">Tocca</div>
+          <div class="tiny muted">${_t("m_tap")}</div>
         </div>
       `;
 
@@ -52,12 +54,12 @@
       const hasQuadsLR = (r.quadL && String(r.quadL).trim() !== "") || (r.quadR && String(r.quadR).trim() !== "");
 
       const armLine = hasArmsLR
-        ? `${t("m_arm_sx")} ${safeVal(r.armL,"cm")} • ${t("m_arm_dx")} ${safeVal(r.armR,"cm")}`
-        : `${t("m_arm_old")} ${safeVal(r.arm,"cm")}`;
+        ? `Braccio SX: ${safeVal(r.armL,"cm")} • Braccio DX: ${safeVal(r.armR,"cm")}`
+        : `Braccio: ${safeVal(r.arm,"cm")}`;
 
       const quadLine = hasQuadsLR
-        ? `${t("m_quad_sx")} ${safeVal(r.quadL,"cm")} • ${t("m_quad_dx")} ${safeVal(r.quadR,"cm")}`
-        : `${t("m_thigh_old")} ${safeVal(r.thigh,"cm")}`;
+        ? `Quad SX: ${safeVal(r.quadL,"cm")} • Quad DX: ${safeVal(r.quadR,"cm")}`
+        : `Coscia: ${safeVal(r.thigh,"cm")}`;
 
       content.innerHTML = `
         <div class="historyMeta">Peso: ${safeVal(r.weight,"kg")}</div>
@@ -86,7 +88,7 @@
           if (typeof deleteMeasureByDate === "function") {
             deleteMeasureByDate(r.date);
           } else {
-            if (!confirm(typeof t==="function"?t("confirm_delete_measure"):"Vuoi davvero cancellare queste misure?")) return;
+            if (!confirm(_t("m_del_confirm"))) return;
             state.measures = (state.measures || []).filter(x => x.date !== r.date);
             save();
           }

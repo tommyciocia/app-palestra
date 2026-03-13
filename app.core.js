@@ -147,17 +147,23 @@ function openAuthModal(mode){
 
   m.dataset.mode = mode || "login";
 
-  if(mode === "register"){
-    if(title)     title.textContent  = (typeof t==="function") ? t("auth_register_title") : "Registrati";
-    if(subT)      subT.textContent   = (typeof t==="function") ? t("auth_register_sub") : "Crea un account per sincronizzare i dati su più dispositivi.";
-    if(btnDo)     btnDo.textContent  = (typeof t==="function") ? t("auth_register_btn") : "Crea account";
-    if(lnkSwitch) lnkSwitch.textContent = (typeof t==="function") ? t("auth_have_account") : "Hai già un account? Accedi";
+  if(typeof window._applyAuthModal === "function"){
+    window._applyAuthModal(mode || "login");
+    if(wrapForgot){
+      if(mode==="register") wrapForgot.classList.add("hidden");
+      else wrapForgot.classList.remove("hidden");
+    }
+  } else if(mode === "register"){
+    if(title)     title.textContent  = "Sign up";
+    if(subT)      subT.textContent   = "Create an account to sync your data.";
+    if(btnDo)     btnDo.textContent  = "Create account";
+    if(lnkSwitch) lnkSwitch.textContent = "Already have an account? Sign in";
     if(wrapForgot) wrapForgot.classList.add("hidden");
   } else {
-    if(title)     title.textContent  = (typeof t==="function") ? t("auth_login_title") : "Accedi";
-    if(subT)      subT.textContent   = (typeof t==="function") ? t("auth_login_sub") : "Accedi per sincronizzare i dati su più dispositivi.";
-    if(btnDo)     btnDo.textContent  = (typeof t==="function") ? t("auth_login_btn") : "Accedi";
-    if(lnkSwitch) lnkSwitch.textContent = (typeof t==="function") ? t("auth_no_account") : "Non hai un account? Registrati";
+    if(title)     title.textContent  = "Sign in";
+    if(subT)      subT.textContent   = "Sign in to sync your data.";
+    if(btnDo)     btnDo.textContent  = "Sign in";
+    if(lnkSwitch) lnkSwitch.textContent = "No account? Sign up";
     if(wrapForgot) wrapForgot.classList.remove("hidden");
   }
 
@@ -180,16 +186,18 @@ async function doAuthAction(){
   const btnDo = document.getElementById("btnAuthDo");
 
   if(!email || !pass){
-    if(err) err.textContent = (typeof t==="function") ? t("err_empty") : "Inserisci email e password.";
+    if(err) err.textContent = (typeof window.t==="function"?window.t("auth_no_email"):"Inserisci email e password.");
     return;
   }
+
+  // nessun campo conferma password: registrazione diretta
 
   if(btnDo) btnDo.disabled = true;
   if(err)   err.textContent = "";
 
   const auth = getAuth();
   if(!auth){
-    if(err) err.textContent = (typeof t==="function") ? t("err_firebase_unavail") : "Firebase non disponibile.";
+    if(err) err.textContent = (typeof window.t==="function"?window.t("auth_firebase_unavailable"):"Firebase non disponibile.");
     if(btnDo) btnDo.disabled = false;
     return;
   }
@@ -203,17 +211,16 @@ async function doAuthAction(){
     closeAuthModal();
     try{ if(typeof hapticMedium==="function") hapticMedium(); }catch{}
   } catch(e){
-    const _t = (typeof t==="function") ? t : (k,d)=>d;
     const msgs = {
-      "auth/user-not-found":      _t("err_user_not_found","Nessun account con questa email."),
-      "auth/wrong-password":      _t("err_wrong_password","Password errata."),
-      "auth/email-already-in-use":_t("err_email_in_use","Email già registrata."),
-      "auth/weak-password":       _t("err_weak_password","Password troppo corta (min 6 caratteri)."),
-      "auth/invalid-email":       _t("err_invalid_email","Email non valida."),
-      "auth/invalid-credential":  _t("err_invalid_cred","Credenziali non valide."),
-      "auth/too-many-requests":   _t("err_too_many","Troppi tentativi. Riprova più tardi.")
+      "auth/user-not-found":      (typeof window.t==="function"?window.t("auth_err_user_not_found"):"Nessun account con questa email."),
+      "auth/wrong-password":      (typeof window.t==="function"?window.t("auth_err_wrong_pass"):"Password errata."),
+      "auth/email-already-in-use":(typeof window.t==="function"?window.t("auth_err_email_in_use"):"Email già registrata."),
+      "auth/weak-password":       (typeof window.t==="function"?window.t("auth_err_weak_pass"):"Password troppo corta."),
+      "auth/invalid-email":       (typeof window.t==="function"?window.t("auth_err_invalid_email"):"Email non valida."),
+      "auth/invalid-credential":  (typeof window.t==="function"?window.t("auth_err_invalid_cred"):"Credenziali non valide."),
+      "auth/too-many-requests":   (typeof window.t==="function"?window.t("auth_err_too_many"):"Troppi tentativi.")
     };
-    if(err) err.textContent = msgs[e.code] || (_t("err_prefix","Errore: ") + (e.message || e.code));
+    if(err) err.textContent = msgs[e.code] || ("Errore: " + (e.message || e.code));
   } finally {
     if(btnDo) btnDo.disabled = false;
   }
@@ -223,15 +230,15 @@ async function doForgotPassword(){
   const email = (document.getElementById("authEmail")?.value || "").trim();
   const err   = document.getElementById("authError");
   if(!email){
-    if(err) err.textContent = (typeof t==="function") ? t("forgot_need_email") : "Inserisci prima la tua email.";
+    if(err) err.textContent = (typeof window.t==="function"?window.t("auth_forgot_no_email"):"Inserisci prima la tua email.");
     return;
   }
   const auth = getAuth();
   try{
     await auth.sendPasswordResetEmail(email);
-    if(err){ err.style.color = "var(--primary)"; err.textContent = (typeof t==="function") ? t("forgot_sent") : "Email inviata! Controlla la casella."; }
+    if(err){ err.style.color = "var(--primary)"; err.textContent = (typeof window.t==="function"?window.t("auth_forgot_sent"):"Email inviata! Controlla la casella."); }
   }catch(e){
-    if(err){ err.style.color = ""; err.textContent = ((typeof t==="function") ? t("err_prefix") : "Errore: ") + (e.message || e.code); }
+    if(err){ err.style.color = ""; err.textContent = "Errore: " + (e.message || e.code); }
   }
 }
 
@@ -297,7 +304,7 @@ function initEmailLogin(){
           state = remote;
           save();
           try{ renderAll(); }catch{}
-          openModal({ icon:"☁️", title:(typeof t==="function"?t("modal_import_ok_title"):"Dati sincronizzati"), sub:(typeof t==="function"?t("modal_import_ok_sub"):"Dati caricati dal cloud.") });
+          openModal({ icon:"☁️", title:(typeof window.t==="function"?window.t("sync_title"):"Dati sincronizzati"), sub:(typeof window.t==="function"?window.t("sync_sub"):"Dati caricati dal cloud.") });
         } else if(localSessions > 0){
           // ho dati locali più recenti: li carico sul cloud
           await pushToCloud();
@@ -541,13 +548,13 @@ function show(view){
 
   navItems.forEach(b => b.classList.toggle("active", b.dataset.view===view));
   if(topTitle){
-    const _t = (typeof t==="function") ? t : null;
-    topTitle.textContent = view==="workout" ? "Workout" : (view==="history" ? (_t?_t("top_history"):"Storico") : (_t?_t("top_measures"):"Misure"));
+    const _vn=typeof window.t==="function";
+    if(view==="workout") topTitle.textContent=_vn?window.t("nav_workout"):"Workout";
+    else if(view==="history") topTitle.textContent=_vn?window.t("nav_history"):"Storico";
+    else topTitle.textContent=_vn?window.t("nav_measures"):"Misure";
   }
   if(topSub){
-    const _t = (typeof t==="function") ? t : null;
-    if(_t) topSub.textContent = _t("top_sub",{s:state.sessions.length,d:state.template.days.length});
-    else   topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
+    topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
   }
 
   try{ if(view==="workout"  && typeof renderWorkout         === "function") renderWorkout(); }catch{}
@@ -575,7 +582,6 @@ function renderAll(){
   try{ if(typeof renderMeasures       === "function") renderMeasures(); }catch{}
 
   if(topSub){
-    if(typeof t==="function") topSub.textContent = t("top_sub",{s:state.sessions.length,d:state.template.days.length});
-    else topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
+    topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
   }
 }

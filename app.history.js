@@ -1,3 +1,5 @@
+function _t(key){ return (typeof window.t==="function") ? window.t(key) : key; }
+
 const histSearch = document.getElementById("histSearch");
 const histDay = document.getElementById("histDay");
 const historyList = document.getElementById("historyList");
@@ -88,7 +90,7 @@ function renderStatsStrip(){
   const elStreak = document.getElementById("statStreak");
   const elKg     = document.getElementById("statKg");
   if(elTotal)  elTotal.textContent  = total;
-  if(elStreak) elStreak.textContent = streak > 0 ? `${streak}gg` : "—";
+  if(elStreak) elStreak.textContent = streak > 0 ? `${streak}${_t("streak_suffix")||"d"}` : "—";
   if(elKg)     elKg.textContent     = kgLabel;
 }
 
@@ -129,7 +131,7 @@ function renderHistory(){
 
   historyList.innerHTML = "";
   if(list.length === 0){
-    historyList.innerHTML = `<div class="card"><div class="muted">Nessun allenamento trovato.</div></div>`;
+    historyList.innerHTML = `<div class="card"><div class="muted">${_t("hist_empty")}</div></div>`;
     return;
   }
 
@@ -142,7 +144,7 @@ function renderHistory(){
   }
 
   const monthKeys = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
-  const MONTH_NAMES = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+  const MONTH_NAMES = (typeof window.t==="function" && Array.isArray(window.t("months"))) ? window.t("months") : ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
 
   monthKeys.forEach((monthKey, mIdx)=>{
     const mm = parseInt(monthKey.slice(5,7),10) - 1;
@@ -162,7 +164,7 @@ function renderHistory(){
 
     const left = document.createElement("div");
     left.style.cssText = "display:flex; align-items:center; gap:8px; font-weight:900;";
-    left.innerHTML = `📅 ${monthLabel} <span class="monthBadge">${monthCount} allenament${monthCount===1?"o":"i"}</span>`;
+    left.innerHTML = `📅 ${monthLabel} <span class="monthBadge">${monthCount} ${monthCount===1?_t("hist_sets_label"):_t("hist_sets_label_plural")}</span>`;
 
     const right = document.createElement("div");
     right.style.cssText = "opacity:.75; font-weight:900; font-size:18px;";
@@ -211,7 +213,7 @@ function renderHistory(){
         </div>
 
         <details style="margin-top:10px;">
-          <summary style="cursor:pointer; font-weight:900; user-select:none;">Dettagli ▸</summary>
+          <summary style="cursor:pointer; font-weight:900; user-select:none;">${_t("hist_details")} ▸</summary>
           <div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
         </details>
       `;
@@ -220,11 +222,11 @@ function renderHistory(){
       const det = box.querySelector("details");
       const sum = box.querySelector("summary");
       det.addEventListener("toggle", ()=>{
-        sum.textContent = det.open ? "Dettagli ▾" : "Dettagli ▸";
+        sum.textContent = det.open ? _t("hist_details")+" ▾" : _t("hist_details")+" ▸";
       });
 
       box.querySelector("button").onclick = ()=>{
-        if(!confirm(`Eliminare allenamento del ${fmtDate(sess.date)}?`)) return;
+        if(!confirm(`${_t("hist_del_confirm")} ${fmtDate(sess.date)}?`)) return;
         state.sessions = state.sessions.filter(s => s !== sess);
         save(); renderAll(); hapticMedium();
       };
@@ -301,7 +303,6 @@ function summarize(sess){
 }
 
 function renderHistory(){
-  renderStatsStrip();
   if(!historyList) return;
 
   const query = (histSearch?.value||"").trim();
@@ -317,7 +318,7 @@ function renderHistory(){
 
   historyList.innerHTML = "";
   if(list.length === 0){
-    historyList.innerHTML = `<div class="card"><div class="muted">Nessun allenamento trovato.</div></div>`;
+    historyList.innerHTML = `<div class="card"><div class="muted">${_t("hist_empty")}</div></div>`;
     return;
   }
 
@@ -335,7 +336,8 @@ function renderHistory(){
   for(const monthKey of monthKeys){
     const mm = monthKey.slice(5,7);
     const yyyy = monthKey.slice(0,4);
-    const monthLabel = `${mm}/${yyyy}`;
+    const MONTH_NAMES2 = (typeof window.t==="function"&&Array.isArray(window.t("months")))?window.t("months"):["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+    const monthLabel = `${MONTH_NAMES2[parseInt(mm,10)-1]||mm} ${yyyy}`;
 
     // ✅ wrapper mese
     const wrap = document.createElement("div");
@@ -356,7 +358,8 @@ function renderHistory(){
     const left = document.createElement("div");
     left.style.fontWeight = "900";
     left.style.textAlign = "left";
-    left.textContent = `📅 ${monthLabel}`;
+    const _mc2 = groups[monthKey].length;
+    left.innerHTML = `📅 ${monthLabel} <span class="monthBadge">${_mc2} ${_mc2===1?_t("hist_sets_label"):_t("hist_sets_label_plural")}</span>`;
 
     const right = document.createElement("div");
     right.style.opacity = "0.75";
@@ -399,20 +402,20 @@ function renderHistory(){
         <div class="historyTop">
           <div>
             <div class="historyTitle">${fmtDate(sess.date)} • ${esc(dayName)}${dur}</div>
-            <div class="historyMeta">Set completati: ${done}/${total}</div>
+            <div class="historyMeta">${_t("hist_sets_done")} ${done}/${total}</div>
             <div class="historyMeta">${esc(exLine)}</div>
           </div>
           <button class="btn ghost danger" style="padding:10px 12px;">Elimina</button>
         </div>
 
         <details style="margin-top:10px;">
-         <summary style="cursor:pointer; font-weight:900;">Dettagli</summary>
+         <summary style="cursor:pointer; font-weight:900;">${_t("hist_details")} ▸</summary>
           <div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;"></div>
         </details>
       `;
 
       box.querySelector("button").onclick = ()=>{
-        if(!confirm(`Eliminare allenamento del ${fmtDate(sess.date)}?`)) return;
+        if(!confirm(`${_t("hist_del_confirm")} ${fmtDate(sess.date)}?`)) return;
         state.sessions = state.sessions.filter(s => s !== sess);
         save();
         renderAll();
@@ -886,14 +889,14 @@ histSearch && histSearch.addEventListener("input", ()=>{ renderHistory(); render
 histDay && histDay.addEventListener("change", ()=>{ renderHistory(); renderCharts(); });
 
 btnClearHistory && (btnClearHistory.onclick = ()=>{
-  if(!confirm("Svuotare tutto lo storico?")) return;
+  if(!confirm(_t("hist_clear_confirm"))) return;
   state.sessions = [];
   save();
   renderAll();
   hapticMedium();
 
   track("history_cleared");
-  openModal({ icon:"🧹", title:"Storico svuotato", sub:"Tutti gli allenamenti sono stati rimossi." });
+  openModal({ icon:"🧹", title:_t("hist_cleared_title"), sub:_t("hist_cleared_sub") });
 });
 
 // ✅ CLICK bottone PR
@@ -916,4 +919,3 @@ Calcolo (formula): 1RM = kg × (1 + reps/30)`;
     alert(sub);
   }
 });
- 
