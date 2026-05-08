@@ -82,7 +82,7 @@ function setLoginUI(user){
   const btnOut = document.getElementById("btnAuthOut");
 
   if(user){
-    if(badge)  badge.textContent = `✅ ${user.email}`;
+    if(badge)  badge.textContent = `[OK] ${user.email}`;
     if(btnIn)  btnIn.classList.add("hidden");
     if(btnOut) btnOut.classList.remove("hidden");
   } else {
@@ -214,7 +214,7 @@ async function doAuthAction(){
     const msgs = {
       "auth/user-not-found":      (typeof window.t==="function"?window.t("auth_err_user_not_found"):"Nessun account con questa email."),
       "auth/wrong-password":      (typeof window.t==="function"?window.t("auth_err_wrong_pass"):"Password errata."),
-      "auth/email-already-in-use":(typeof window.t==="function"?window.t("auth_err_email_in_use"):"Email già registrata."),
+      "auth/email-already-in-use":(typeof window.t==="function"?window.t("auth_err_email_in_use"):"Email gia registrata."),
       "auth/weak-password":       (typeof window.t==="function"?window.t("auth_err_weak_pass"):"Password troppo corta."),
       "auth/invalid-email":       (typeof window.t==="function"?window.t("auth_err_invalid_email"):"Email non valida."),
       "auth/invalid-credential":  (typeof window.t==="function"?window.t("auth_err_invalid_cred"):"Credenziali non valide."),
@@ -263,7 +263,7 @@ function initEmailLogin(){
   const btnDo = document.getElementById("btnAuthDo");
   if(btnDo) btnDo.addEventListener("click", doAuthAction);
 
-  // switch login ↔ register
+  // switch login <-> register
   const lnk = document.getElementById("authSwitchLink");
   if(lnk) lnk.addEventListener("click", ()=>{
     const m = document.getElementById("authModal");
@@ -298,16 +298,16 @@ function initEmailLogin(){
       // pull dati dal cloud e merge
       const remote = await pullFromCloud();
       if(remote){
-        // merge: prendi quello con più sessioni
+        // merge: prendi quello con piu sessioni
         const localSessions  = (state.sessions  || []).length;
         const remoteSessions = (remote.sessions || []).length;
         if(remoteSessions > localSessions){
           state = remote;
           save();
           try{ renderAll(); }catch{}
-          openModal({ icon:"☁️", title:(typeof window.t==="function"?window.t("sync_title"):"Dati sincronizzati"), sub:(typeof window.t==="function"?window.t("sync_sub"):"Dati caricati dal cloud.") });
+          openModal({ icon:"SYNC", title:(typeof window.t==="function"?window.t("sync_title"):"Dati sincronizzati"), sub:(typeof window.t==="function"?window.t("sync_sub"):"Dati caricati dal cloud.") });
         } else if(localSessions > 0){
-          // ho dati locali più recenti: li carico sul cloud
+          // ho dati locali piu recenti: li carico sul cloud
           await pushToCloud();
         }
       } else if(state.sessions?.length > 0){
@@ -321,46 +321,35 @@ function initEmailLogin(){
 /* Template base */
 const TEMPLATE = {
   days: [
-    { id:"push",  name:"PUSH",  exercises:[
-      { name:"Chest press", targets:["6-8","6-8","8-10"] },
-      { name:"Spinte panca 15°", targets:["6-8","6-8","6-8"] },
-      { name:"Croci cavo basso panca (5° buco)", targets:["6-8","6-8","6-8"] },
-      { name:"Lento avanti (bilanciere multi)", targets:["6-8","6-8","6-8"] },
-      { name:"Spalle frontali cavo basso (cavigliera)", targets:["6-8","6-8","6-8"] },
-      { name:"Cavo alto tirata", targets:["6-8","6-8","6-8"] },
-      { name:"Push down corda", targets:["6-8","6-8","6-8"] },
-      { name:"Addominali machine (opzionale)", targets:["6-8","6-8","6-8"] }
+    { id:"giorno-1", name:"GIORNO 1", exercises:[
+      { name:"SQUAT 15kg x lato bilanciere 20kg", targets:["6-10","6-10","6-10"] },
+      { name:"PANCA MULTI 30* 21,25kg x lato", targets:["6-10","6-10","6-10"] },
+      { name:"RDL MANUBRI 14kg x manubrio", targets:["6-8","6-8","6-8"] },
+      { name:"REMATORE MULTI 10kg x lato", targets:["6-10","6-10","6-10"] },
+      { name:"PULLDOWN 50kg", targets:["6-10","6-10","6-10"] },
+      { name:"IPERESTENSIONE 10kg peso", targets:["6-10","6-10","6-10"] },
+      { name:"MACCHINA DI ADDOMINAZIONE 45kg", targets:["6-10","6-10","6-10"] }
     ]},
-    { id:"pull",  name:"PULL",  exercises:[
-      { name:"Lat presa stretta", targets:["6-8","6-8","8-10"] },
-      { name:"Rematore appoggiato panca (2 manubri)", targets:["6-8","6-8","6-8"] },
-      { name:"Tirata cavo alto panca 60° (schiena)", targets:["6-8","6-8","6-8"] },
-      { name:"Row singola", targets:["6-8","6-8","6-8"] },
-      { name:"Curl cavo basso monolaterale", targets:["6-8","6-8","6-8"] },
-      { name:"Curl EZ", targets:["6-8","6-8","6-8"] },
-      { name:"Addominali machine (opzionale)", targets:["6-8","6-8","6-8"] }
+    { id:"giorno-2", name:"GIORNO 2", exercises:[
+      { name:"PRESSA GAMBE 80kg carico", targets:["6-10","6-10","6-10"] },
+      { name:"SPINTE PANCA 30* 22kg x manubrio", targets:["6-10","6-10","6-10"] },
+      { name:"MACCHINA PER IL LAT 75kg", targets:["6-10","6-10","6-10"] },
+      { name:"CROCI PANCA 70* 25kg x lato", targets:["6-10","6-10","6-10"] },
+      { name:"ALZATE LATERALI CAVO 10kg", targets:["6-10","6-10","6-10"] },
+      { name:"ESTENSIONE DELLE GAMBE 80kg", targets:["8-10","8-10","8-10"] },
+      { name:"LEG CARL 30kg", targets:["8-10","8-10","8-10"] }
     ]},
-    { id:"legs",  name:"LEGS",  exercises:[
-      { name:"Squat machine", targets:["6-8","6-8","8-10"] },
-      { name:"Leg extension", targets:["6-8","6-8","6-8"] },
-      { name:"Leg press", targets:["6-8","6-8","6-8"] },
-      { name:"RDL manubri", targets:["6-8","6-8","6-8"] },
-      { name:"Addominali machine", targets:["6-8","6-8","6-8"] }
-    ]},
-    { id:"upper", name:"UPPER", exercises:[
-      { name:"Panca multi", targets:["6-8","6-8","8-10"] },
-      { name:"Croci cavo alto", targets:["6-8","6-8","6-8"] },
-      { name:"Pulley", targets:["6-8","6-8","6-8"] },
-      { name:"Pull down", targets:["6-8","6-8","6-8"] },
-      { name:"Corda sopra la testa", targets:["6-8","6-8","6-8"] },
-      { name:"Hammer curl", targets:["6-8","6-8","6-8"] },
-      { name:"French press EZ 60° (SS)", targets:["6-8","6-8","6-8"] },
-      { name:"Curl manubri panca 60° (SS)", targets:["6-8","6-8","6-8"] },
-      { name:"Addominali machine (opzionale)", targets:["6-8","6-8","6-8"] }
+    { id:"giorno-3", name:"GIORNO 3", exercises:[
+      { name:"STAMPA TORACICA 100kg", targets:["6-10","6-10","6-10"] },
+      { name:"RDL 12kg", targets:["6-10","6-10","6-10"] },
+      { name:"FILA SU PANCA 27,5kg", targets:["6-10","6-10","6-10"] },
+      { name:"ALZATE LATERALI MANUBRI 10kg", targets:["6-10","6-10","6-10"] },
+      { name:"CARRUCOLA 50kg", targets:["6-10","6-10","6-10"] },
+      { name:"FACE PULL CAVO ALTO 50kg", targets:["6-10","6-10","6-10"] },
+      { name:"CURL PANCA 60* 12kg", targets:["6-10","6-10","6-10"] }
     ]}
   ]
 };
-
 /* Utils */
 function todayISO(){
   const d = new Date();
@@ -458,6 +447,24 @@ function loadState(){
 let state = loadState();
 try{ state.sessions && state.sessions.sort((a,b)=>b.date.localeCompare(a.date)); }catch{}
 
+function replaceTemplateIfLegacy(){
+  try{
+    const ids = (state?.template?.days || []).map(d => d.id);
+    const isLegacy4Days =
+      ids.length === 4 &&
+      ids.includes("push") &&
+      ids.includes("pull") &&
+      ids.includes("legs") &&
+      ids.includes("upper");
+    if(!isLegacy4Days) return;
+    state.template = JSON.parse(JSON.stringify(TEMPLATE));
+    state.currentDayId = TEMPLATE.days[0].id;
+    state.draft = null;
+    save();
+  }catch{}
+}
+replaceTemplateIfLegacy();
+
 function save(){
   localStorage.setItem(LS_KEY, JSON.stringify(state));
   // sync al cloud se loggato
@@ -531,7 +538,7 @@ const modalSub   = document.getElementById("modalSub");
 const modalBtn   = document.getElementById("modalBtn");
 
 /* Modal */
-function openModal({icon="✅", title="Ok", sub=""}){
+function openModal({icon="OK", title="Ok", sub=""}){
   modalIcon.textContent  = icon;
   modalTitle.textContent = title;
   modalSub.textContent   = sub;
@@ -555,7 +562,7 @@ function show(view){
     else topTitle.textContent=_vn?window.t("nav_measures"):"Misure";
   }
   if(topSub){
-    topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
+    topSub.textContent = `Storico: ${state.sessions.length} - Schede: ${state.template.days.length}`;
   }
 
   try{ if(view==="workout"  && typeof renderWorkout         === "function") renderWorkout(); }catch{}
@@ -583,6 +590,7 @@ function renderAll(){
   try{ if(typeof renderMeasures       === "function") renderMeasures(); }catch{}
 
   if(topSub){
-    topSub.textContent = `Storico: ${state.sessions.length} • Schede: ${state.template.days.length}`;
+    topSub.textContent = `Storico: ${state.sessions.length} - Schede: ${state.template.days.length}`;
   }
 }
+
