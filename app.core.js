@@ -437,11 +437,17 @@ function uniqueDayId(base){
 function loadState(){
   const raw = localStorage.getItem(LS_KEY);
   if(!raw){
-    const init = { template:TEMPLATE, currentDayId:TEMPLATE.days[0].id, draft:null, sessions:[], measures:[] };
+    const init = { template:TEMPLATE, currentDayId:TEMPLATE.days[0].id, draft:null, sessions:[], measures:[], progressProfile:{weightKg:"", heightCm:""} };
     localStorage.setItem(LS_KEY, JSON.stringify(init));
     return init;
   }
-  try{ return JSON.parse(raw); }
+  try{
+    const parsed = JSON.parse(raw);
+    if(!parsed.progressProfile || typeof parsed.progressProfile !== "object"){
+      parsed.progressProfile = {weightKg:"", heightCm:""};
+    }
+    return parsed;
+  }
   catch{ localStorage.removeItem(LS_KEY); return loadState(); }
 }
 let state = loadState();
@@ -530,6 +536,7 @@ const navItems = document.querySelectorAll(".navItem");
 const vWorkout  = document.getElementById("view-workout");
 const vHistory  = document.getElementById("view-history");
 const vMeasures = document.getElementById("view-measures");
+const vProgress = document.getElementById("view-progress");
 
 const modal      = document.getElementById("modal");
 const modalIcon  = document.getElementById("modalIcon");
@@ -553,13 +560,15 @@ function show(view){
   vWorkout  && vWorkout.classList.toggle("hidden",  view!=="workout");
   vHistory  && vHistory.classList.toggle("hidden",  view!=="history");
   vMeasures && vMeasures.classList.toggle("hidden", view!=="measures");
+  vProgress && vProgress.classList.toggle("hidden", view!=="progress");
 
   navItems.forEach(b => b.classList.toggle("active", b.dataset.view===view));
   if(topTitle){
     const _vn=typeof window.t==="function";
     if(view==="workout") topTitle.textContent=_vn?window.t("nav_workout"):"Workout";
     else if(view==="history") topTitle.textContent=_vn?window.t("nav_history"):"Storico";
-    else topTitle.textContent=_vn?window.t("nav_measures"):"Misure";
+    else if(view==="measures") topTitle.textContent=_vn?window.t("nav_measures"):"Misure";
+    else topTitle.textContent="PROGRESSI";
   }
   if(topSub){
     topSub.textContent = `Storico: ${state.sessions.length} - Schede: ${state.template.days.length}`;
@@ -574,6 +583,7 @@ function show(view){
     }
   }catch{}
   try{ if(view==="measures" && typeof renderMeasures === "function") renderMeasures(); }catch{}
+  try{ if(view==="progress" && typeof renderProgress === "function") renderProgress(); }catch{}
 
   track("screen_view", { screen: view });
 }
@@ -588,6 +598,7 @@ function renderAll(){
   try{ if(typeof renderHistory        === "function") renderHistory(); }catch{}
   try{ if(typeof renderCharts         === "function") renderCharts(); }catch{}
   try{ if(typeof renderMeasures       === "function") renderMeasures(); }catch{}
+  try{ if(typeof renderProgress       === "function") renderProgress(); }catch{}
 
   if(topSub){
     topSub.textContent = `Storico: ${state.sessions.length} - Schede: ${state.template.days.length}`;
