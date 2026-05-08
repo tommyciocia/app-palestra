@@ -229,6 +229,7 @@ async function doAuthAction(){
 async function doForgotPassword(){
   const email = (document.getElementById("authEmail")?.value || "").trim();
   const err   = document.getElementById("authError");
+  if(err) err.style.color = "";
   if(!email){
     if(err) err.textContent = (typeof window.t==="function"?window.t("auth_forgot_no_email"):"Inserisci prima la tua email.");
     return;

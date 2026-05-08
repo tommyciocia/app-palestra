@@ -21,6 +21,14 @@
     let __keepAlive = null;
     let __keepAliveArmed = false;
 
+    function clampSeconds(value){
+      const n = Number(value);
+      if(!Number.isFinite(n)) return 90;
+      if(n < 10) return 10;
+      if(n > 3600) return 3600;
+      return Math.round(n);
+    }
+
     function armAudio(){
       try{
         if(__keepAliveArmed) return;
@@ -157,8 +165,10 @@
 
     // Se l’utente cambia i secondi mentre NON sta correndo, aggiorno solo display
     restInput.addEventListener("input", () => {
-      const v = parseInt(restInput.value, 10);
-      if (Number.isFinite(v)) {
+      const raw = parseInt(restInput.value, 10);
+      if (Number.isFinite(raw)) {
+        const v = clampSeconds(raw);
+        if (String(v) !== String(restInput.value)) restInput.value = String(v);
         // se NON è in corso un timer, aggiorna il valore “pronto”
         if (!endAt){
           remainingSeconds = v;
@@ -174,13 +184,9 @@
 
       if (endAt) return; // già in corso
 
-      const v = parseInt(restInput.value, 10);
-      if (!Number.isFinite(v) || v <= 0) {
-        restInput.value = "90";
-        remainingSeconds = 90;
-      } else {
-        remainingSeconds = v;
-      }
+      const v = clampSeconds(parseInt(restInput.value, 10));
+      restInput.value = String(v);
+      remainingSeconds = v;
 
       endAt = Date.now() + (remainingSeconds * 1000);
       savePersisted();
@@ -194,8 +200,9 @@
       endAt = 0;
       clearPersisted();
 
-      const v = parseInt(restInput.value, 10);
-      remainingSeconds = (Number.isFinite(v) && v > 0) ? v : 90;
+      const v = clampSeconds(parseInt(restInput.value, 10));
+      restInput.value = String(v);
+      remainingSeconds = v;
       updateDisplay();
     });
 

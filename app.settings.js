@@ -530,7 +530,11 @@
     reader.onload=(e)=>{
       try{
         const parsed=JSON.parse(e.target.result);
-        if(!parsed.template||!Array.isArray(parsed.sessions)) throw new Error("invalid");
+        const isObj = parsed && typeof parsed === "object" && !Array.isArray(parsed);
+        const hasTemplate = isObj && parsed.template && typeof parsed.template === "object";
+        const hasSessions = isObj && Array.isArray(parsed.sessions);
+        const hasMeasures = isObj && Array.isArray(parsed.measures);
+        if(!isObj || !hasTemplate || !hasSessions || !hasMeasures) throw new Error("invalid");
         if(!confirm(window.t("import_confirm"))) return;
         localStorage.setItem("gym_tracker_full_v10",JSON.stringify(parsed));
         try{
