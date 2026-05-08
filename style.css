@@ -1,4 +1,4 @@
-:root{
+﻿:root{
   /* DARK (default) */
   --bg:#0b1220;
   --panel2:rgba(0,0,0,.18);
@@ -316,7 +316,7 @@ body{
 .historyMeta{ color:var(--muted); font-size:12px; margin-top:4px; }
 
 /* Bottom nav */
-/* Bottom nav — più bassa, safe-area ok */
+/* Bottom nav â€” piÃ¹ bassa, safe-area ok */
 .bottomNav{
   position: fixed;
   left: 0;
@@ -335,7 +335,7 @@ body{
   /* togliamo altezza fissa */
   height: auto;
 
-  /* bottoni più giù */
+  /* bottoni piÃ¹ giÃ¹ */
   padding: 6px 12px calc(2px + env(safe-area-inset-bottom));
 }
 
@@ -345,7 +345,7 @@ body{
   flex: 1;
 
   height: 56px;
-  margin: 0 6px; /* 👈 li stacca tra loro */
+  margin: 0 6px; /* ðŸ‘ˆ li stacca tra loro */
 
   border: 1px solid var(--border);
   background: var(--chipBg);
@@ -434,7 +434,7 @@ canvas{
 }
 
 /* =========================================================
-   SOLO MISURE: DATA lunga + più bassa + icona piccola (iPhone)
+   SOLO MISURE: DATA lunga + piÃ¹ bassa + icona piccola (iPhone)
    ========================================================= */
 #view-measures #mDate{
   width: 100%;
@@ -460,10 +460,10 @@ canvas{
 }
 
 /* =========================================================
-   ✅ AGGIUNTE SOLO ESTETICA (override) — NON ROMPE NIENTE
+   âœ… AGGIUNTE SOLO ESTETICA (override) â€” NON ROMPE NIENTE
    ========================================================= */
 
-/* micro-animazioni “app-like” */
+/* micro-animazioni â€œapp-likeâ€ */
 .iconBtn, .iconBtnSm, .iconTiny, .btn, .chip, .navItem{
   transition: transform .12s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease;
 }
@@ -474,29 +474,29 @@ canvas{
   transform: translateY(1px) scale(.985);
 }
 
-/* cards un pelo più “pulite” (solo look) */
+/* cards un pelo piÃ¹ â€œpuliteâ€ (solo look) */
 .card, .exercise, .historyItem, .chartCard{
   box-shadow: 0 14px 44px rgba(0,0,0,.32);
 }
 
-/* bottom bar più “incollata” e bottoni più giù (safe-area ok) */
+/* bottom bar piÃ¹ â€œincollataâ€ e bottoni piÃ¹ giÃ¹ (safe-area ok) */
 .bottomNav{
   padding: 8px 12px env(safe-area-inset-bottom);
   align-items: flex-end;
 }
 
-/* ✅ iOS: bottoni bottom più compatti (padding -2px) */
+/* âœ… iOS: bottoni bottom piÃ¹ compatti (padding -2px) */
 .navItem{
   padding: 8px 8px; /* prima 10px 8px */
 }
 
-/* ✅ iOS: testo “Storico / Misure” un filo più piccolo */
+/* âœ… iOS: testo â€œStorico / Misureâ€ un filo piÃ¹ piccolo */
 .navTxt{
   font-size: 11px;   /* prima 12px */
   letter-spacing: .2px;
 }
 
-/* effetto “glow” soft sulla tab attiva (solo estetica) */
+/* effetto â€œglowâ€ soft sulla tab attiva (solo estetica) */
 .navItem{
   position: relative;
   overflow: hidden;
@@ -623,7 +623,7 @@ html[data-theme="light"] canvas{
   padding: 3px 8px;
   border-radius: 999px;
 }
-/* 🔒 In modalità scheda (prima di iniziare allenamento)
+/* ðŸ”’ In modalitÃ  scheda (prima di iniziare allenamento)
    mostra SOLO il nome esercizio */
 body:not(.workout-active) .exercise .badge,
 body:not(.workout-active) .exercise .setRow{
@@ -746,3 +746,5 @@ body:not(.workout-active) .exercise .setRow{
 .switch input:checked + .slider:before{
   transform: translate(22px, -50%);
 }
+`r`n
+

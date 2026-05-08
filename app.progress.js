@@ -23,7 +23,7 @@
     return Number.isFinite(n) ? n : NaN;
   }
 
-  function normalizeScore(raw, sampleCount, totalSessions, totalSets){
+  function normalizeScore(raw, sampleCount, totalSessions, totalSets, weightKg, heightCm){
     if(!Number.isFinite(raw) || raw <= 0) return 0;
     // Curva bilanciata: forza + costanza + volume complessivo.
     const strength = ((Math.log10(raw + 1) - 1.7) / 1.5) * 100;
@@ -31,7 +31,16 @@
     const consistencyFactor = 0.6 + 0.4 * Math.min(1, (sampleCount || 0) / 45);
     const activityBonus = Math.min(22, Math.log10((totalSets || 0) + 1) * 10);
     const sessionBonus = Math.min(12, Math.log10((totalSessions || 0) + 1) * 8);
-    const score = clampedStrength * consistencyFactor + activityBonus + sessionBonus;
+    const relativeFactor = Number.isFinite(weightKg) && weightKg > 0
+      ? Math.max(0.75, Math.min(1.25, 75 / weightKg))
+      : 1;
+    const bmi = (Number.isFinite(weightKg) && Number.isFinite(heightCm) && heightCm > 0)
+      ? (weightKg / Math.pow(heightCm / 100, 2))
+      : NaN;
+    const bmiFactor = Number.isFinite(bmi)
+      ? (bmi < 18.5 ? 0.94 : (bmi > 30 ? 0.92 : 1))
+      : 1;
+    const score = clampedStrength * consistencyFactor * relativeFactor * bmiFactor + activityBonus + sessionBonus;
     return Math.max(0, Math.min(100, Math.round(score)));
   }
 
@@ -68,6 +77,7 @@
     return state.progressProfile;
   }
 
+
   function render(){
     if(!vProgress || !summary || !groupsWrap) return;
     const profile = ensureProfile();
@@ -93,19 +103,21 @@
 
     const totalSessions = sessions.length;
     const totalSets = Object.values(groupRaw).reduce((acc, arr) => acc + arr.length, 0);
+    const weightKg = toNum(profile.weightKg);
+    const heightCm = toNum(profile.heightCm);
 
     const scores = GROUPS.map(g => {
       const arr = groupRaw[g.key];
       const avg = arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
-      const score = normalizeScore(avg, arr.length, totalSessions, totalSets);
+      const score = normalizeScore(avg, arr.length, totalSessions, totalSets, weightKg, heightCm);
       return { ...g, avg, score, level: levelFromScore(score) };
     });
 
     const general = scores.length ? Math.round(scores.reduce((a,b)=>a+b.score,0)/scores.length) : 0;
     const gLevel = levelFromScore(general);
 
-    const w = toNum(profile.weightKg);
-    const h = toNum(profile.heightCm);
+    const w = weightKg;
+    const h = heightCm;
     const bmi = (Number.isFinite(w) && Number.isFinite(h) && h > 0)
       ? (w / Math.pow(h / 100, 2))
       : NaN;
@@ -141,5 +153,7 @@
   }
 
   if(btnSave) btnSave.addEventListener("click", saveProfile);
+  if(pWeight) pWeight.addEventListener("change", saveProfile);
+  if(pHeight) pHeight.addEventListener("change", saveProfile);
   window.renderProgress = render;
 })();
