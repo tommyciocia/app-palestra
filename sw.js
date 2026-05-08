@@ -1,23 +1,24 @@
 // sw.js
-const VERSION = "v14"; // bump: email login + firestore sync
+const VERSION = "v15"; // bump: full cache refresh
 const CACHE = `gym-tracker-cache-${VERSION}`;
 
 const ASSETS = [
   "./",
   "./index.html",
-  "./style.css?v=18",
+  "./style.css?v=19",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
 
-  "./app.core.js?v=7",
-  "./app.settings.js?v=2",
-  "./app.workout.js?v=5",
-  "./app.timer.js?v=5",
-  "./app.history.js?v=5",
-  "./app.measures.js?v=6",
-  "./app.measures.history.js?v=6",
-  "./app.measures.history.page.js?v=6"
+  "./app.core.js?v=8",
+  "./app.settings.js?v=3",
+  "./app.workout.js?v=6",
+  "./app.timer.js?v=6",
+  "./app.history.js?v=6",
+  "./app.measures.js?v=7",
+  "./app.measures.history.js?v=7",
+  "./app.measures.history.page.js?v=7",
+  "./app.progress.js?v=2"
 ];
 
 self.addEventListener("install", (event) => {
